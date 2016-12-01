@@ -1,0 +1,2 @@
+- toutes les machines auront des opérations différentes car pour augmenter la performance il faut multiplier toutes les opérations.
+- temps de travail : type d'opération x 3
