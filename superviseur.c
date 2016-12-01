@@ -15,6 +15,8 @@
 #define SEMPERM 0600				  /* Permission */
 #define NB_MACHINE 8
 
+int msgid, semid ;
+
 typedef struct{
   int typePiece;
 } piece;
@@ -38,18 +40,19 @@ struct tete{
 	pthread_mutex_t mtx;
 };
 
-//structure qui contient les données à transférer au thread surveillant
-typedef struct {
-	struct tete* file;
-	int* semid;
-}arg_surveillant;
-
-
 void erreur(const char *msg)
 {
   perror(msg);
   exit(1);
 }
+/*Suppréssion de la file de message et du semaphore avant quitter l'app*/
+void traitantSIGINT(int s)
+{
+  semctl(semid, 0, IPC_RMID, 0);
+  msgctl(msgid,IPC_RMID,NULL);
+  exit(0);
+}
+
 
 /* affichage pour suivi du trajet */
 void message(int i, char* s) {
@@ -130,23 +133,22 @@ void v(int semid) { //epilogue
 void* surveillant(void* arg) {
   messageOperateur msg;
 
-  arg_surveillant* surv = arg;
-	struct tete* fileAttente_pieces = surv->file;
-	int semid = *(surv->semid);
-	int msqid = msgget(cle, 0);
-	if(msqid != -1) { //file existante donc suppression
-		if(msgctl(msqid, IPC_RMID, NULL) == -1) {
+  struct tete* fileAttente_pieces = arg;
+
+	msgid = msgget(cle, 0);
+	if(msgid != -1) { //file existante donc suppression
+		if(msgctl(msgid, IPC_RMID, NULL) == -1) {
 			erreur("Suppression file");
 		}
 	}
-	msqid = msgget(cle, IPC_CREAT | 0600); //création de la file
-	if(msqid == -1) {
+	msgid = msgget(cle, IPC_CREAT | 0600); //création de la file
+	if(msgid == -1) {
 		erreur("Création file");
 	}
 
   piece nouvellePiece;
 	while(1) {
-		if((msgrcv(msqid, &msg, sizeof(int), 1, 0)) == -1) {
+		if((msgrcv(msgid, &msg, sizeof(int), 1, 0)) == -1) {
 			erreur("Reception de message");
 		}
     nouvellePiece.typePiece=msg.operation;
@@ -164,6 +166,9 @@ void* surveillant(void* arg) {
 
 int main(int argc,char* argv[])
 {
+
+  signal(SIGINT,traitantSIGINT);
+
   piece convoyeur;
   int nb_threads_occupes = 0;
 
@@ -171,7 +176,6 @@ int main(int argc,char* argv[])
 	struct maillon* maillon_piece;
   init_file(&fileAttente_pieces);
 
-  int semid;
   if ((semid = semget(IPC_PRIVATE, 1, IPC_CREAT | 0600)) == -1) {
     erreur("Déclaration de la sémaphore de réception principale");
   }
@@ -179,12 +183,8 @@ int main(int argc,char* argv[])
     erreur("Initialisation de la sémaphore de réception principale");
   }
 
-  arg_surveillant surv;
-  surv.file = &fileAttente_pieces;
-  surv.semid = &semid;
-
   pthread_t t_surveillant;
-  if(pthread_create(&t_surveillant, NULL, &surveillant, &surv) != 0) {
+  if(pthread_create(&t_surveillant, NULL, &surveillant, &fileAttente_pieces) != 0) {
 		erreur("Création thread surveillant");
 	}
 	printf("~~ M : création du thread surveillant\n");
