@@ -9,11 +9,12 @@
 #include <pthread.h>
 #include <errno.h>
 
+#include "GestionnaireMachines.h"
+
 #define IFLAGS (SEMPERM | IPC_CREAT)
 #define SKEY   (key_t) IPC_PRIVATE
 #define cle 314
 #define SEMPERM 0600				  /* Permission */
-#define NB_MACHINE 8
 
 int msgid, semid ;
 
@@ -167,11 +168,24 @@ void* surveillant(void* arg) {
 int main(int argc,char* argv[])
 {
 
+  if(argc-1 != 1) {
+      erreur("Veuillez passer un nombre de machines en argument");
+  }
   signal(SIGINT,traitantSIGINT);
+
+  // initialisation des machines
+  int nbMachines=atoi(argv[1]);
+  Machine machines[nbMachines];
+  pthread_t thread_Machines[nbMachines];
+  creationMachines(nbMachines, (pthread_t *)&thread_Machines, (Machine *)&machines);
+
+
+
 
   piece convoyeur;
   int nb_threads_occupes = 0;
 
+  //Initialisation de la file d'attente des pièces à usiner
   struct tete fileAttente_pieces;
 	struct maillon* maillon_piece;
   init_file(&fileAttente_pieces);
@@ -182,14 +196,19 @@ int main(int argc,char* argv[])
   if (semctl(semid, 0, SETVAL, 0) == -1) {
     erreur("Initialisation de la sémaphore de réception principale");
   }
-
   pthread_t t_surveillant;
   if(pthread_create(&t_surveillant, NULL, &surveillant, &fileAttente_pieces) != 0) {
 		erreur("Création thread surveillant");
 	}
+
+
 	printf("~~ M : création du thread surveillant\n");
 
   int arret = 0;
+
+  struct maillon* maillon;
+  piece pieceCourrente;
+
   while(!arret) {
     printf("~~ M : en attente d'une pièce...\n");
     p(semid);
@@ -197,14 +216,33 @@ int main(int argc,char* argv[])
     if(pthread_mutex_lock(&mutex_occupes) == -1) {
       erreur("Verrouillage mutex pour variable nb threads occupes");
     }*/
-    if(nb_threads_occupes < NB_MACHINE) {
+    printf("~~ M : Pièce en liste d'attente dispo ...\n");
+    if(nb_threads_occupes < nbMachines) {
+      maillon = lecture_file(&fileAttente_pieces);
+  		if(maillon != NULL)
+  		{
+        pieceCourrente =maillon->obj;
+        // section à protéger
+        if(machines[pieceCourrente.typePiece].etatFonctionnement == 1) {
+          if(machines[pieceCourrente.typePiece].dispo == 1) { //attente active ????????
+            convoyeur =  pieceCourrente;
+            pthread_mutex_unlock(&machines[pieceCourrente.typePiece].mutex_sync);
+          }
+          {
+            v(semid);
+          }
+        }
+        else{
+          //machine en panne
+        }
+    }
 
-      /*TO DO : ajout de la bonne pièce sur le convoyeur
 
+/*
       if(pthread_mutex_unlock(&mutex_occupes) == -1) {
         erreur("Déverrouillage mutex pour variable nb threads occupes");
       }*/
-      printf("~~ M : thread disponible, déverrouillage mutex\n");
+      //printf("~~ M : thread disponible, déverrouillage mutex\n");
     }
   }
 
