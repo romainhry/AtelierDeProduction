@@ -81,7 +81,7 @@ struct maillon* lecture_file(struct tete* tete)
 	return m;
 }
 
-void CreationPiece(int nbrPiece,int nbrTypePieceDifferentes)
+void CreationPleinPiece(int nbrPiece,int nbrTypePieceDifferentes)
 {
 
   int t,u,cpt=0;
@@ -103,6 +103,76 @@ void CreationPiece(int nbrPiece,int nbrTypePieceDifferentes)
 	ajout_file(pieces[t], &fileAttente_pieces);
 	}
 }
+
+int CreationPiece()
+{
+
+  int t=0,r=0,u=0,cpt=0,cptPiece=0,typePiece=0,Valider=2,nbrDeDemande=-1;
+
+  pieceAjouter piecesDemande[TYPE_PIECES];
+
+	while (Valider == 2)
+	{
+	nbrDeDemande++;
+	printf("Il y a %d différents types de pièces. Quel type de pièces voulez-vous ajouter ?\ntype de pièce n° : ",TYPE_PIECES); 
+
+		do
+		{
+		scanf("%d",&piecesDemande[nbrDeDemande].typePiece);
+
+			if (piecesDemande[nbrDeDemande].typePiece < 1  || piecesDemande[nbrDeDemande].typePiece > TYPE_PIECES)
+			{
+			printf("\ntype de pièce invalide\ntype de pièce n° : ");
+			}
+		}
+		while (piecesDemande[nbrDeDemande].typePiece < 1  || piecesDemande[nbrDeDemande].typePiece > TYPE_PIECES);
+
+
+	printf("combien de pièces de type %d voulez vous ajouter ?\n",piecesDemande[nbrDeDemande].typePiece);
+	printf("nombre de pièces de type %d = ",piecesDemande[nbrDeDemande].typePiece);
+	scanf("%d",&piecesDemande[nbrDeDemande].nbrPiece);
+	cptPiece=cptPiece + piecesDemande[nbrDeDemande].nbrPiece;
+	
+		if (nbrDeDemande == TYPE_PIECES-1)
+		{
+		printf("Vous avez ajouté le maximum de pièces différentes. On valide deja ces operations !\n");
+		Valider=1;
+		}
+		else 
+		{
+			do
+			{
+			printf("\nValider : 1 		Ajouter pieces : 2\nAction : ");
+			scanf("%d",&Valider);
+			printf("\n");
+			}
+			while (Valider != 1 && Valider != 2);
+		}
+	}
+
+	printf("vous avez ajouté %d pièces en tout.\n",cptPiece);
+ 
+	piece pieces[cptPiece];
+	
+	for(t=0;t<=nbrDeDemande;t++)
+	{
+		for(r=0;r<piecesDemande[t].nbrPiece;r++) 
+		{
+			pieces[cpt].typePiece=piecesDemande[t].typePiece;
+			cpt++;
+		}
+	}
+
+  	init_file(&fileAttente_pieces);
+
+	for(t=0;t<cptPiece;t++) 
+	{
+	ajout_file(pieces[t], &fileAttente_pieces);
+	}
+	
+	return cptPiece;
+}
+
 void AffichageListeChaine(int nbrPiece)
 {
 
@@ -121,7 +191,7 @@ void AffichageListeChaine(int nbrPiece)
 			if (t==0)
 			{
 			pieceRecep[t]=maillon_recep_piece.obj;
-			printf("File d'attente :\n first [%d]=%d -> ",t,pieceRecep[t].typePiece);
+			printf("\nAffichage de la File d'attente :\n first [%d]=%d -> ",t,pieceRecep[t].typePiece);
 			}
 			else	
 			{
@@ -135,9 +205,11 @@ void AffichageListeChaine(int nbrPiece)
 
 int main(int argc,char* argv[])
 {
+	int nbr_pieces;
 
-	CreationPiece(NBR_PIECES,TYPE_PIECES);	
-	AffichageListeChaine(NBR_PIECES);
+	//CreationPleinPiece(NBR_PIECES,TYPE_PIECES);	//Création de 100 pièces différentes de chaque type (juste pour test)
+	nbr_pieces=CreationPiece();
+	AffichageListeChaine(nbr_pieces);
 
 
   return 0;

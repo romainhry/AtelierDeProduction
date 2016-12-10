@@ -7,6 +7,15 @@ typedef struct
   int typePiece;
 } piece;
 
+
+typedef struct
+{
+  int typePiece;
+  int nbrPiece;   
+} pieceAjouter;	    //utile quand on rentre plusieurs pièce du même type d'un coup (fonction CreationPieces)
+
+
+
 struct maillon
 {
 	struct maillon* next;
@@ -26,4 +35,5 @@ void init_file(struct tete* file);
 void ajout_file(piece pPiece, struct tete* tete); 
 struct maillon* lecture_file(struct tete* tete);
 void AffichageListeChaine(int);
-void CreationPiece(int nbrPiece,int nbrTypePieceDifferentes);
+void CreationPleinPiece(int nbrPiece,int nbrTypePieceDifferentes);
+int CreationPiece();
