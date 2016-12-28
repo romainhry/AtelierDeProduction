@@ -10,6 +10,8 @@
 #include <errno.h>
 
 #include "GestionnaireMachines.h"
+#include "RobotAlimentation.h"
+#include "Convoyeur.h"
 
 #define IFLAGS (SEMPERM | IPC_CREAT)
 #define SKEY   (key_t) IPC_PRIVATE
@@ -27,25 +29,12 @@ typedef struct {
   int operation;
 }messageOperateur;
 
-//Enregistrement des pièces dans une liste chainée faisant office de file d'attente
-//maillon de file d'attente
-struct maillon{
-	struct maillon* next;
-  piece obj;
-};
-
-//tete de file d'attente
-struct tete{
-	struct maillon* first;
-	struct maillon* last;
-	pthread_mutex_t mtx;
-};
-
 void erreur(const char *msg)
 {
   perror(msg);
   exit(1);
 }
+
 /*Suppréssion de la file de message et du semaphore avant quitter l'app*/
 void traitantSIGINT(int s)
 {
@@ -65,50 +54,6 @@ void message(int i, char* s) {
    fflush(stdout);
 }
 
-//initialisation de la file
-void init_file(struct tete* file) {
-	file->first = NULL;
-	file->last = NULL;
-	if(pthread_mutex_init(&file->mtx, NULL) == -1) {
-		erreur("Initialisation du mutex");
-	}
-}
-
-//ajout d'un maillon en fin de file
-void ajout_file(piece pPiece, struct tete* tete) {
-	if(pthread_mutex_lock(&tete->mtx) == -1) {
-		erreur("Verrouillage du mutex");
-	}
-	struct maillon* m = malloc(sizeof(struct maillon));
-	m->next = NULL;
-	m->obj = pPiece;
-
-	if(tete->first == NULL) {
-		tete->first = m;
-	} else {
-		(tete->last)->next = m;
-	}
-	tete->last = m;
-	if(pthread_mutex_unlock(&tete->mtx) == -1) {
-		erreur("Déverrouillage du mutex");
-	}
-}
-
-//lecture et suppression d'un maillon en début de file
-struct maillon* lecture_file(struct tete* tete) {
-	if(pthread_mutex_lock(&tete->mtx) == -1) {
-		erreur("Verrouillage du mutex");
-	}
-	struct maillon* m;
-	m = tete->first;
-	if(tete->first != NULL) {
-		tete->first = (tete->first)->next;
-	}
-	if(pthread_mutex_unlock(&tete->mtx) == -1) {
-		erreur("Déverrouillage du mutex");
-	}
-	return m;
-}
 
 void p(int semid) { //prologue
 	struct sembuf op[1];
@@ -130,41 +75,8 @@ void v(int semid) { //epilogue
 	}
 }
 
-//thread communiquant avec l'opérateur : attend des nouvelles pièces
-void* surveillant(void* arg) {
-  messageOperateur msg;
 
-  struct tete* fileAttente_pieces = arg;
-
-	msgid = msgget(cle, 0);
-	if(msgid != -1) { //file existante donc suppression
-		if(msgctl(msgid, IPC_RMID, NULL) == -1) {
-			erreur("Suppression file");
-		}
-	}
-	msgid = msgget(cle, IPC_CREAT | 0600); //création de la file
-	if(msgid == -1) {
-		erreur("Création file");
-	}
-
-  piece nouvellePiece;
-	while(1) {
-		if((msgrcv(msgid, &msg, sizeof(int), 1, 0)) == -1) {
-			erreur("Reception de message");
-		}
-    nouvellePiece.typePiece=msg.operation;
-		//on ajoute la piece reçue à la file d'attente
-		ajout_file(nouvellePiece, fileAttente_pieces);
-		v(semid);
-		printf("~~~ S : nouvelle pièce arrivée, opération : %d\n", nouvellePiece.typePiece);
-	}
-
-	printf("~~~ S : terminaison du thread surveillant\n");
-	pthread_exit(NULL);
-}
-
-
-
+// Le main est le thread Superviseur
 int main(int argc,char* argv[])
 {
 
@@ -180,15 +92,12 @@ int main(int argc,char* argv[])
   creationMachines(nbMachines, (pthread_t *)&thread_Machines, (Machine *)&machines);
 
 
-
-
-  piece convoyeur;
   int nb_threads_occupes = 0;
 
   //Initialisation de la file d'attente des pièces à usiner
-  struct tete fileAttente_pieces;
+  struct convoyeur myConvoyeur;
 	struct maillon* maillon_piece;
-  init_file(&fileAttente_pieces);
+  init_convoyeur(&convoyeur);
 
   if ((semid = semget(IPC_PRIVATE, 1, IPC_CREAT | 0600)) == -1) {
     erreur("Déclaration de la sémaphore de réception principale");
@@ -196,18 +105,17 @@ int main(int argc,char* argv[])
   if (semctl(semid, 0, SETVAL, 0) == -1) {
     erreur("Initialisation de la sémaphore de réception principale");
   }
-  pthread_t t_surveillant;
-  if(pthread_create(&t_surveillant, NULL, &surveillant, &fileAttente_pieces) != 0) {
-		erreur("Création thread surveillant");
+  pthread_t t_robotAlimentation;
+  if(pthread_create(&t_robotAlimentation, NULL, &robotAlimentation, &convoyeur) != 0) {
+		erreur("Création thread robotAlimentation");
 	}
 
 
-	printf("~~ M : création du thread surveillant\n");
+	printf("~~ M : création du thread robotAlimentation\n");
 
   int arret = 0;
 
-  struct maillon* maillon;
-  piece pieceCourrente;
+  int typePieceCourrente;
 
   while(!arret) {
     printf("~~ M : en attente d'une pièce...\n");
@@ -216,16 +124,12 @@ int main(int argc,char* argv[])
     if(pthread_mutex_lock(&mutex_occupes) == -1) {
       erreur("Verrouillage mutex pour variable nb threads occupes");
     }*/
-    printf("~~ M : Pièce en liste d'attente dispo ...\n");
+    printf("~~ M : Pièce mise sur convoyeur ...\n");
     if(nb_threads_occupes < nbMachines) {
-      maillon = lecture_file(&fileAttente_pieces);
-  		if(maillon != NULL)
-  		{
-        pieceCourrente =maillon->obj;
+      typePieceCourrente = typePiece_convoyeur(&convoyeur);
         // section à protéger
-        if(machines[pieceCourrente.typePiece].etatFonctionnement == 1) {
-          if(machines[pieceCourrente.typePiece].dispo == 1) { //attente active ????????
-            convoyeur =  pieceCourrente;
+        if(machines[typePieceCourrente].etatFonctionnement == 1) {
+          if(machines[typePieceCourrente].dispo == 1) { //attente active ????????
             pthread_mutex_unlock(&machines[pieceCourrente.typePiece].mutex_sync);
           }
           {

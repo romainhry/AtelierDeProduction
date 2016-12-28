@@ -18,4 +18,6 @@ void *fonctionnementMachine(void *machine_thread);
 
 void creationMachines(int nbMachines, pthread_t * threads, Machine * machines);
 
+struct maillon* retire_convoyeur(struct convoyeur* myConvoyeur);
+
 #endif

@@ -16,7 +16,9 @@ void *fonctionnementMachine(void *machine_thread)
   Machine * machines=(Machine *) machine_thread;
   while(1) {
     pthread_mutex_lock(&machines->mutex_sync);
-    printf("Reveil machine %d\n",machines->numeroMachine);
+    printf("Reveil machine %d et retire pièce du convoyeur\n",machines->numeroMachine);
+    struct maillon* maillon;
+    maillon = retire_convoyeur(&convoyeur);
     //section à proteger
     machines->dispo=0;
     printf("[Machine numero : %d ] va travailler : %d secondes, effectuer la tache : %d\n",machines->numeroMachine,machines->tempsUsinage,machines->typeOperation);
