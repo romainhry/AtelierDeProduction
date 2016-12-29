@@ -1,5 +1,17 @@
 #include "Convoyeur.h"
 
+#include <unistd.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <errno.h>
+
+
+void erreur(const char *msg)
+{
+  perror(msg);
+  exit(1);
+}
+
 //initialisation du convoyeur
 void init_convoyeur(struct convoyeur* myConvoyeur) {
 	myConvoyeur->first = NULL;
@@ -9,7 +21,7 @@ void init_convoyeur(struct convoyeur* myConvoyeur) {
 	}
 }
 
-//ajout d'un maillon sur le convoyeur
+//ajout d'une piece sur le convoyeur
 void alimente_convoyeur(piece pPiece, struct convoyeur* myConvoyeur) {
 	if(pthread_mutex_lock(&myConvoyeur->mtx) == -1) {
 		erreur("Verrouillage du mutex");
@@ -21,7 +33,7 @@ void alimente_convoyeur(piece pPiece, struct convoyeur* myConvoyeur) {
 	if(myConvoyeur->first == NULL) {
 		myConvoyeur->first = m;
 	} else {
-		(convoyeur->last)->next = m;
+		(myConvoyeur->last)->next = m;
 	}
 	myConvoyeur->last = m;
 	if(pthread_mutex_unlock(&myConvoyeur->mtx) == -1) {
@@ -39,7 +51,7 @@ struct maillon* retire_convoyeur(struct convoyeur* myConvoyeur) {
 	if(myConvoyeur->first != NULL) {
 		myConvoyeur->first = (myConvoyeur->first)->next;
 	}
-	if(pthread_mutex_unlock(&convoyeur->mtx) == -1) {
+	if(pthread_mutex_unlock(&myConvoyeur->mtx) == -1) {
 		erreur("Déverrouillage du mutex");
 	}
 	return m;
@@ -51,8 +63,8 @@ int typePiece_convoyeur(struct convoyeur* myConvoyeur) {
 		erreur("Verrouillage du mutex");
 	}
 	int res;
-	res = (myConvoyeur->first)->obj->typePiece;
-	if(pthread_mutex_unlock(&convoyeur->mtx) == -1) {
+	res = (myConvoyeur->first)->obj.typePiece;
+	if(pthread_mutex_unlock(&myConvoyeur->mtx) == -1) {
 		erreur("Déverrouillage du mutex");
 	}
 	return res;

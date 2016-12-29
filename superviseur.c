@@ -9,31 +9,16 @@
 #include <pthread.h>
 #include <errno.h>
 
+
+#include "Convoyeur.h"
 #include "GestionnaireMachines.h"
 #include "RobotAlimentation.h"
-#include "Convoyeur.h"
+
 
 #define IFLAGS (SEMPERM | IPC_CREAT)
 #define SKEY   (key_t) IPC_PRIVATE
-#define cle 314
 #define SEMPERM 0600				  /* Permission */
 
-int msgid, semid ;
-
-typedef struct{
-  int typePiece;
-} piece;
-
-typedef struct {
-  long type;
-  int operation;
-}messageOperateur;
-
-void erreur(const char *msg)
-{
-  perror(msg);
-  exit(1);
-}
 
 /*Suppréssion de la file de message et du semaphore avant quitter l'app*/
 void traitantSIGINT(int s)
@@ -55,27 +40,6 @@ void message(int i, char* s) {
 }
 
 
-void p(int semid) { //prologue
-	struct sembuf op[1];
-	op[0].sem_num = 0;
-	op[0].sem_op = -1;
-	op[0].sem_flg = 0;
-	if(semop(semid, op, 1) == -1) {
-		erreur("Opération prologue sur sémaphore");
-	}
-}
-
-void v(int semid) { //epilogue
-	struct sembuf op[1];
-	op[0].sem_num = 0;
-	op[0].sem_op = 1;
-	op[0].sem_flg = 0;
-	if(semop(semid, op, 1) == -1) {
-		erreur("Opération épilogue sur sémaphore");
-	}
-}
-
-
 // Le main est le thread Superviseur
 int main(int argc,char* argv[])
 {
@@ -85,19 +49,22 @@ int main(int argc,char* argv[])
   }
   signal(SIGINT,traitantSIGINT);
 
+  //Initialisation du convoyeur des pièces à usiner
+  struct convoyeur myConvoyeur;
+	struct maillon* maillon_piece;
+  init_convoyeur(&myConvoyeur);
+
+
   // initialisation des machines
   int nbMachines=atoi(argv[1]);
   Machine machines[nbMachines];
   pthread_t thread_Machines[nbMachines];
-  creationMachines(nbMachines, (pthread_t *)&thread_Machines, (Machine *)&machines);
+  creationMachines(nbMachines, (pthread_t *)&thread_Machines, (Machine *)&machines, &myConvoyeur);
 
 
   int nb_threads_occupes = 0;
 
-  //Initialisation de la file d'attente des pièces à usiner
-  struct convoyeur myConvoyeur;
-	struct maillon* maillon_piece;
-  init_convoyeur(&convoyeur);
+
 
   if ((semid = semget(IPC_PRIVATE, 1, IPC_CREAT | 0600)) == -1) {
     erreur("Déclaration de la sémaphore de réception principale");
@@ -106,7 +73,7 @@ int main(int argc,char* argv[])
     erreur("Initialisation de la sémaphore de réception principale");
   }
   pthread_t t_robotAlimentation;
-  if(pthread_create(&t_robotAlimentation, NULL, &robotAlimentation, &convoyeur) != 0) {
+  if(pthread_create(&t_robotAlimentation, NULL, &robotAlimentation, &myConvoyeur) != 0) {
 		erreur("Création thread robotAlimentation");
 	}
 
@@ -120,35 +87,12 @@ int main(int argc,char* argv[])
   while(!arret) {
     printf("~~ M : en attente d'une pièce...\n");
     p(semid);
-    /*
-    if(pthread_mutex_lock(&mutex_occupes) == -1) {
-      erreur("Verrouillage mutex pour variable nb threads occupes");
-    }*/
     printf("~~ M : Pièce mise sur convoyeur ...\n");
-    if(nb_threads_occupes < nbMachines) {
-      typePieceCourrente = typePiece_convoyeur(&convoyeur);
-        // section à protéger
-        if(machines[typePieceCourrente].etatFonctionnement == 1) {
-          if(machines[typePieceCourrente].dispo == 1) { //attente active ????????
-            pthread_mutex_unlock(&machines[pieceCourrente.typePiece].mutex_sync);
-          }
-          {
-            v(semid);
-          }
-        }
-        else{
-          //machine en panne
-        }
-    }
-
-
-/*
-      if(pthread_mutex_unlock(&mutex_occupes) == -1) {
-        erreur("Déverrouillage mutex pour variable nb threads occupes");
-      }*/
-      //printf("~~ M : thread disponible, déverrouillage mutex\n");
-    }
+    typePieceCourrente = typePiece_convoyeur(&myConvoyeur);
+    pthread_mutex_lock(&machines[typePieceCourrente].mutex);
+    machines[typePieceCourrente].nbPiece++;
+    pthread_cond_signal(&machines[typePieceCourrente].attendre);
+    pthread_mutex_unlock(&machines[typePieceCourrente].mutex);
   }
-
   return 0;
 }
