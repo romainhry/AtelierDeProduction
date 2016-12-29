@@ -30,7 +30,8 @@ void traitantSIGINT(int s)
 
 
 /* affichage pour suivi du trajet */
-void message(int i, char* s) {
+void message(int i, char* s) 
+{
    #define COLONNE 20
    int j, NbBlanc;
    NbBlanc=i*COLONNE;
@@ -44,14 +45,15 @@ void message(int i, char* s) {
 int main(int argc,char* argv[])
 {
 
-  if(argc-1 != 1) {
+  if(argc-1 != 1) 	
+  {
       erreur("Veuillez passer un nombre de machines en argument");
   }
   signal(SIGINT,traitantSIGINT);
 
   //Initialisation du convoyeur des pièces à usiner
   struct convoyeur myConvoyeur;
-	struct maillon* maillon_piece;
+  struct maillon* maillon_piece;
   init_convoyeur(&myConvoyeur);
 
 
@@ -66,14 +68,17 @@ int main(int argc,char* argv[])
 
 
 
-  if ((semid = semget(IPC_PRIVATE, 1, IPC_CREAT | 0600)) == -1) {
+  if ((semid = semget(IPC_PRIVATE, 1, IPC_CREAT | 0600)) == -1) 
+	{
     erreur("Déclaration de la sémaphore de réception principale");
   }
-  if (semctl(semid, 0, SETVAL, 0) == -1) {
+  if (semctl(semid, 0, SETVAL, 0) == -1) 
+	{
     erreur("Initialisation de la sémaphore de réception principale");
   }
   pthread_t t_robotAlimentation;
-  if(pthread_create(&t_robotAlimentation, NULL, &robotAlimentation, &myConvoyeur) != 0) {
+  if(pthread_create(&t_robotAlimentation, NULL, &robotAlimentation, &myConvoyeur) != 0) 
+	{
 		erreur("Création thread robotAlimentation");
 	}
 
@@ -84,7 +89,8 @@ int main(int argc,char* argv[])
 
   int typePieceCourrente;
 
-  while(!arret) {
+  while(!arret) 
+	{
     printf("~~ M : en attente d'une pièce...\n");
     p(semid);
     printf("~~ M : Pièce mise sur convoyeur ...\n");

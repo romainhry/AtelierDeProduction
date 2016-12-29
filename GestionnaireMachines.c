@@ -14,24 +14,26 @@ void *fonctionnementMachine(void *machine_thread)
 {
   char * marchePanne;
   Machine * machines=(Machine *) machine_thread;
-  while(1) {
+  while(1) 
+  {
     pthread_mutex_lock(&machines->mutex);
-    if(machines->nbPiece>=1)
-    {
-      printf("Reveil machine %d et retire pièce du convoyeur\n",machines->numeroMachine);
-      struct maillon* maillon;
-      maillon = retire_convoyeur(machines->myConvoyeur);
-      machines->dispo=0;
-      printf("[Machine numero : %d ] va travailler : %d secondes, effectuer la tache : %d\n",machines->numeroMachine,machines->tempsUsinage,machines->typeOperation);
-      sleep(machines->tempsUsinage);
-      printf("[Machine numero : %d ] à fini de travailler\n",machines->numeroMachine);
-      machines->nbPiece--;
-      machines->dispo=1;
-    }
-    else{
-      pthread_cond_wait(&machines->attendre,&machines->mutex);
-    }
-    pthread_mutex_unlock(&machines->mutex);
+		if(machines->nbPiece>=1)
+		{
+	      printf("Reveil machine %d et retire pièce du convoyeur\n",machines->numeroMachine);
+	      struct maillon* maillon;
+	      maillon = retire_convoyeur(machines->myConvoyeur);
+	      machines->dispo=0;
+	      printf("[Machine numero : %d ] va travailler : %d secondes, effectuer la tache : %d\n",machines->numeroMachine,machines->tempsUsinage,machines->typeOperation);
+	      sleep(machines->tempsUsinage);
+	      printf("[Machine numero : %d ] à fini de travailler\n",machines->numeroMachine);
+	      machines->nbPiece--;
+	      machines->dispo=1;
+	    }
+	    else
+	    {
+	      pthread_cond_wait(&machines->attendre,&machines->mutex);
+	    }
+	    pthread_mutex_unlock(&machines->mutex);
 
   }
 
@@ -67,7 +69,8 @@ void creationMachines(int nbMachines, pthread_t * threads, Machine * machines , 
     machines[t].dispo=1;
     machines[t].nbPiece=0;
 
-    if(pthread_mutex_init(&machines[t].mutex, NULL) == -1) {
+    if(pthread_mutex_init(&machines[t].mutex, NULL) == -1) 
+	{
   		perror("Initialisation mutex de synchro de machine\n");
   		exit(1);
   	}

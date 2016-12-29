@@ -10,7 +10,8 @@ void p(int semid);
 void v(int semid);
 
 
-typedef struct {
+typedef struct 
+{
   long type;
   int operation;
 }messageOperateur;

@@ -11,7 +11,7 @@ typedef struct
   int tempsUsinage;
   int typeOperation;
   int etatFonctionnement; //0= panne 1=marche
-  int dispo; //0= occupé 1=dispo
+  int dispo; 		  //0= occupé 1=dispo
   pthread_mutex_t mutex;
   pthread_cond_t attendre;
 

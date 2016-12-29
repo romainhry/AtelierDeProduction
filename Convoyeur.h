@@ -6,19 +6,22 @@
 
 void erreur(const char *msg);
 
-typedef struct{
+typedef struct
+{
   int typePiece;
 } piece;
 
 
 //maillon du convoyeur contenant une piece
-struct maillon{
-	struct maillon* next;
+struct maillon
+{
+  struct maillon* next;
   piece obj;
 };
 
 //convoyeur du convoyeur
-struct convoyeur{
+struct convoyeur
+{
 	struct maillon* first;
 	struct maillon* last;
 	pthread_mutex_t mtx;
