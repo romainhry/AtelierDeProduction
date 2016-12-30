@@ -1,40 +1,49 @@
-
-#include <pthread.h>
-#include <stdio.h>
 #include <stdlib.h>
+#include <stdio.h>
+#include <sys/wait.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <sys/sem.h>
+#include <sys/msg.h>
 #include <unistd.h>
+#include <pthread.h>
+#include <errno.h>
+
 #include "GestionnaireMachines.h"
 
 #define MARCHE		1
 #define PANNE		0
 
 
-
 void *fonctionnementMachine(void *machine_thread)
 {
+  int testInterblocage=0;  //A supprimer à la fin des tests
   char * marchePanne;
   Machine * machines=(Machine *) machine_thread;
+  printf("[Fonctionnement machine] : adresse machine = %d\n",(int)machines);
   while(1) 
   {
     pthread_mutex_lock(&machines->mutex);
+
 		if(machines->nbPiece>=1)
 		{
-	      printf("Reveil machine %d et retire pièce du convoyeur\n",machines->numeroMachine);
-	      struct maillon* maillon;
-	      maillon = retire_convoyeur(machines->myConvoyeur);
-	      machines->dispo=0;
-	      printf("[Machine numero : %d ] va travailler : %d secondes, effectuer la tache : %d\n",machines->numeroMachine,machines->tempsUsinage,machines->typeOperation);
-	      sleep(machines->tempsUsinage);
-	      printf("[Machine numero : %d ] à fini de travailler\n",machines->numeroMachine);
-	      machines->nbPiece--;
-	      machines->dispo=1;
-	    }
-	    else
-	    {
-	      pthread_cond_wait(&machines->attendre,&machines->mutex);
-	    }
-	    pthread_mutex_unlock(&machines->mutex);
+		      printf("Reveil machine %d et retire pièce du convoyeur\n",machines->numeroMachine);
+		      struct maillon* maillon;
+		      maillon = retire_convoyeur(machines->myConvoyeur);
+		      machines->dispo=0;
+		      printf("[Machine numero : %d ] va travailler : %d secondes, effectuer la tache : %d\n",machines->numeroMachine,machines->tempsUsinage,machines->typeOperation);
+		      sleep(machines->tempsUsinage);
+		      printf("[Machine numero : %d ] à fini de travailler\n",machines->numeroMachine);
+		      machines->nbPiece--;
+		      machines->dispo=1;
 
+	         }
+		 else
+		 {
+		      pthread_cond_wait(&machines->attendre,&machines->mutex);
+		 }
+
+  pthread_mutex_unlock(&machines->mutex);
   }
 
   pthread_exit(NULL);
@@ -75,6 +84,14 @@ void creationMachines(int nbMachines, pthread_t * threads, Machine * machines , 
   		exit(1);
   	}
 
+    if(pthread_cond_init(&machines[t].attendre, NULL) == -1) 
+	{
+  		perror("Initialisation mutex d'attente de machine\n");
+  		exit(1);
+  	}
+
+
+    printf("[Creation Machine %d] : adresse = %d\n",t,(int) &machines[t]);
     if (pthread_create(&threads[t], &thread_attr, fonctionnementMachine, (void *)&machines[t]) == 1)
     {
       perror("Erreur Creation Threads\n");
