@@ -38,36 +38,40 @@ void v(int semid) //epilogue
 //thread communiquant avec le superviseur : attend des nouvelles pièces
 void* robotAlimentation(void* arg) 
 {
+  int i=0;
   messageOperateur msg;
 
   struct convoyeur* myConvoyeur = arg;
 
-	msgid = msgget(cle, 0);
-	if(msgid != -1) //file existante donc suppression
-	{ 
-		if(msgctl(msgid, IPC_RMID, NULL) == -1) 
-		{
-			erreur("Suppression file");
-		}
-	}
-	msgid = msgget(cle, IPC_CREAT | 0600); //création de la file
-	if(msgid == -1) 
-	{
-		erreur("Création file");
-	}
+
 
   piece nouvellePiece;
 	while(1) 
 	{
-		if((msgrcv(msgid, &msg, sizeof(int), 1, 0)) == -1) 
+		if((msgrcv(msgid, &msg, (sizeof(msg)-sizeof(long)), 1, 1)) == -1) 
 		{
 			erreur("Reception de message");
 		}
+		if (msg.nbrPiece == 1)
+		{
     		nouvellePiece.typePiece=msg.operation;
 		//on ajoute la piece reçue à la file d'attente
 		alimente_convoyeur(nouvellePiece, myConvoyeur);
 		v(semid);
-		printf("~~~ S : nouvelle pièce arrivée, opération : %d\n", nouvellePiece.typePiece);
+		printf("~~~ S : nouvelle pièce mise sur le convoyeur, opération : %d\n", nouvellePiece.typePiece);
+		}
+		else 
+		{
+			for (i=0; i<msg.nbrPiece; i++)
+			{
+			nouvellePiece.typePiece=msg.operation;
+			alimente_convoyeur(nouvellePiece, myConvoyeur);
+			v(semid);
+			}
+			
+			printf("~~~ S : %d pièces mises sur le convoyeur, opération : %d\n",msg.nbrPiece, nouvellePiece.typePiece);
+		}
+		
 	}
 
 	printf("~~~ S : terminaison du thread robotAlimentation\n");

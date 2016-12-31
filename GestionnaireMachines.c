@@ -20,7 +20,6 @@ void *fonctionnementMachine(void *machine_thread)
   int testInterblocage=0;  //A supprimer à la fin des tests
   char * marchePanne;
   Machine * machines=(Machine *) machine_thread;
-  printf("[Fonctionnement machine] : adresse machine = %d\n",(int)machines);
   while(1) 
   {
     pthread_mutex_lock(&machines->mutex);
@@ -90,8 +89,6 @@ void creationMachines(int nbMachines, pthread_t * threads, Machine * machines , 
   		exit(1);
   	}
 
-
-    printf("[Creation Machine %d] : adresse = %d\n",t,(int) &machines[t]);
     if (pthread_create(&threads[t], &thread_attr, fonctionnementMachine, (void *)&machines[t]) == 1)
     {
       perror("Erreur Creation Threads\n");

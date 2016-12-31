@@ -13,11 +13,8 @@
 #include "Convoyeur.h"
 #include "GestionnaireMachines.h"
 #include "RobotAlimentation.h"
+#include "Operateur.h"
 
-
-#define IFLAGS (SEMPERM | IPC_CREAT)
-#define SKEY   (key_t) IPC_PRIVATE
-#define SEMPERM 0600				  /* Permission */
 
 
 /*Suppréssion de la file de message et du semaphore avant quitter l'app*/
@@ -25,6 +22,7 @@ void traitantSIGINT(int s)
 {
   semctl(semid, 0, IPC_RMID, 0);
   msgctl(msgid,IPC_RMID,NULL);
+  msgctl(msgid_op,IPC_RMID,NULL);
   exit(0);
 }
 
@@ -44,21 +42,57 @@ void message(int i, char* s)
 // Le main est le thread Superviseur
 int main(int argc,char* argv[])
 {
-  int testInterblocage=0;  //A supprimer à la fin des tests
-  if(argc-1 != 1) 	
-  {
-      erreur("Veuillez passer un nombre de machines en argument");
-  }
+  messageMachine msgMachine;
+
   signal(SIGINT,traitantSIGINT);
 
   //Initialisation du convoyeur des pièces à usiner
   struct convoyeur myConvoyeur;
   struct maillon* maillon_piece;
   init_convoyeur(&myConvoyeur);
+  
+  //Initialisation des files de messages
 
+  //File Message Machine
+	msgid_op = msgget(cle2, 0);
+	if(msgid_op != -1) //file esxistante donc suppression
+	{ 
+		if(msgctl(msgid_op, IPC_RMID, NULL) == -1) 
+		{
+			erreur("Suppression file");
+		}
+	}
+	msgid_op = msgget(cle2, IPC_CREAT | 0600); //création de la file
+	if(msgid_op == -1) 
+	{
+		erreur("Création file");
+	}
+
+  //File Message Piece	
+	msgid = msgget(cle, 0);
+	if(msgid != -1) //file existante donc suppression
+	{ 
+		if(msgctl(msgid, IPC_RMID, NULL) == -1) 
+		{
+			erreur("Suppression file");
+		}
+	}
+	msgid = msgget(cle, IPC_CREAT | 0600); //création de la file
+	if(msgid == -1) 
+	{
+		erreur("Création file");
+	}
+	
+	printf("Attente information de l'opérateur\n");
+	//Recepetion du nombre de machines à initialiser
+	if((msgrcv(msgid_op, &msgMachine, (sizeof(msgMachine)-sizeof(long)), 1, 0)) == -1) 
+	{
+		erreur("Reception de message");
+	}
+	printf("Information, %d Machines différentes\n",msgMachine.nbrMachine);
 
   // initialisation des machines
-  int nbMachines=atoi(argv[1]);
+  int nbMachines=msgMachine.nbrMachine;
   Machine machines[nbMachines];
   pthread_t thread_Machines[nbMachines];
   creationMachines(nbMachines, (pthread_t *)&thread_Machines, (Machine *)&machines, &myConvoyeur);
@@ -90,7 +124,7 @@ int main(int argc,char* argv[])
 
   while(!arret) 
   {
-    printf("~~ M : en attente d'une pièce...\n");
+    printf("~~ M : en attente de pièces...\n");
     p(semid);
     printf("~~ M : Pièce mise sur convoyeur ...\n");
 

@@ -14,9 +14,8 @@ typedef struct
 {
   long type;
   int operation;
+  int nbrPiece; 
 }messageOperateur;
-
-
 
 //thread communiquant avec le superviseur : attend des nouvelles pièces
 void* robotAlimentation(void* arg);
