@@ -28,7 +28,7 @@ void traitantSIGINT(int s)
 
 
 /* affichage pour suivi du trajet */
-void message(int i, char* s) 
+void message(int i, char* s)
 {
    #define COLONNE 20
    int j, NbBlanc;
@@ -50,42 +50,27 @@ int main(int argc,char* argv[])
   struct convoyeur myConvoyeur;
   struct maillon* maillon_piece;
   init_convoyeur(&myConvoyeur);
-  
-  //Initialisation des files de messages
 
-  //File Message Machine
-	msgid_op = msgget(cle2, 0);
-	if(msgid_op != -1) //file esxistante donc suppression
-	{ 
-		if(msgctl(msgid_op, IPC_RMID, NULL) == -1) 
-		{
-			erreur("Suppression file");
-		}
-	}
-	msgid_op = msgget(cle2, IPC_CREAT | 0600); //création de la file
-	if(msgid_op == -1) 
-	{
-		erreur("Création file");
-	}
+  //Initialisation de file de messages
 
-  //File Message Piece	
+  //File Message Piece
 	msgid = msgget(cle, 0);
 	if(msgid != -1) //file existante donc suppression
-	{ 
-		if(msgctl(msgid, IPC_RMID, NULL) == -1) 
+	{
+		if(msgctl(msgid, IPC_RMID, NULL) == -1)
 		{
 			erreur("Suppression file");
 		}
 	}
 	msgid = msgget(cle, IPC_CREAT | 0600); //création de la file
-	if(msgid == -1) 
+	if(msgid == -1)
 	{
 		erreur("Création file");
 	}
-	
+
 	printf("Attente information de l'opérateur\n");
 	//Recepetion du nombre de machines à initialiser
-	if((msgrcv(msgid_op, &msgMachine, (sizeof(msgMachine)-sizeof(long)), 1, 0)) == -1) 
+	if((msgrcv(msgid, &msgMachine, (sizeof(msgMachine)-sizeof(long)), 1, 0)) == -1)
 	{
 		erreur("Reception de message");
 	}
@@ -102,16 +87,16 @@ int main(int argc,char* argv[])
 
 
 
-  if ((semid = semget(IPC_PRIVATE, 1, IPC_CREAT | 0600)) == -1) 
+  if ((semid = semget(IPC_PRIVATE, 1, IPC_CREAT | 0600)) == -1)
   {
     erreur("Déclaration de la sémaphore de réception principale");
   }
-  if (semctl(semid, 0, SETVAL, 0) == -1) 
+  if (semctl(semid, 0, SETVAL, 0) == -1)
   {
     erreur("Initialisation de la sémaphore de réception principale");
   }
   pthread_t t_robotAlimentation;
-  if(pthread_create(&t_robotAlimentation, NULL, &robotAlimentation, &myConvoyeur) != 0) 
+  if(pthread_create(&t_robotAlimentation, NULL, &robotAlimentation, &myConvoyeur) != 0)
   {
     erreur("Création thread robotAlimentation");
   }
@@ -122,15 +107,15 @@ int main(int argc,char* argv[])
 
   int typePieceCourrente;
 
-  while(!arret) 
+  while(!arret)
   {
     printf("~~ M : en attente de pièces...\n");
     p(semid);
     printf("~~ M : Pièce mise sur convoyeur ...\n");
 
-    
+
     typePieceCourrente = typePiece_convoyeur(&myConvoyeur); //récupère une pièce du convoyeur
-    
+
     pthread_mutex_lock(&machines[typePieceCourrente].mutex);
 
     machines[typePieceCourrente].nbPiece++;

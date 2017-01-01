@@ -20,7 +20,7 @@ void *fonctionnementMachine(void *machine_thread)
   int testInterblocage=0;  //A supprimer à la fin des tests
   char * marchePanne;
   Machine * machines=(Machine *) machine_thread;
-  while(1) 
+  while(1)
   {
     pthread_mutex_lock(&machines->mutex);
 
@@ -28,21 +28,22 @@ void *fonctionnementMachine(void *machine_thread)
 		{
 		      printf("Reveil machine %d et retire pièce du convoyeur\n",machines->numeroMachine);
 		      struct maillon* maillon;
-		      maillon = retire_convoyeur(machines->myConvoyeur);
+		      maillon = retire_convoyeur(machines->myConvoyeur,machines->typeOperation);
 		      machines->dispo=0;
 		      printf("[Machine numero : %d ] va travailler : %d secondes, effectuer la tache : %d\n",machines->numeroMachine,machines->tempsUsinage,machines->typeOperation);
-		      sleep(machines->tempsUsinage);
+          pthread_mutex_unlock(&machines->mutex);
+          sleep(machines->tempsUsinage);
+          pthread_mutex_lock(&machines->mutex);
 		      printf("[Machine numero : %d ] à fini de travailler\n",machines->numeroMachine);
 		      machines->nbPiece--;
 		      machines->dispo=1;
 
-	         }
+     }
 		 else
 		 {
 		      pthread_cond_wait(&machines->attendre,&machines->mutex);
 		 }
-
-  pthread_mutex_unlock(&machines->mutex);
+     pthread_mutex_unlock(&machines->mutex);
   }
 
   pthread_exit(NULL);
@@ -77,13 +78,13 @@ void creationMachines(int nbMachines, pthread_t * threads, Machine * machines , 
     machines[t].dispo=1;
     machines[t].nbPiece=0;
 
-    if(pthread_mutex_init(&machines[t].mutex, NULL) == -1) 
+    if(pthread_mutex_init(&machines[t].mutex, NULL) == -1)
 	{
   		perror("Initialisation mutex de synchro de machine\n");
   		exit(1);
   	}
 
-    if(pthread_cond_init(&machines[t].attendre, NULL) == -1) 
+    if(pthread_cond_init(&machines[t].attendre, NULL) == -1)
 	{
   		perror("Initialisation mutex d'attente de machine\n");
   		exit(1);

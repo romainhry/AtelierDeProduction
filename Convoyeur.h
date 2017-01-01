@@ -24,6 +24,7 @@ struct convoyeur
 {
 	struct maillon* first;
 	struct maillon* last;
+  struct maillon* curseur;
 	pthread_mutex_t mtx;
 };
 
@@ -35,7 +36,7 @@ void init_convoyeur(struct convoyeur* myConvoyeur);
 void alimente_convoyeur(piece pPiece, struct convoyeur* myConvoyeur);
 
 //lecture et suppression d'une piece en début de myConvoyeur
-struct maillon* retire_convoyeur(struct convoyeur* myConvoyeur);
+struct maillon* retire_convoyeur(struct convoyeur* myConvoyeur,int op);
 
 //lecture d'une piece en début de myConvoyeur
 int typePiece_convoyeur(struct convoyeur* myConvoyeur);
