@@ -76,12 +76,12 @@ int main(int argc, char* argv[])
         /* vidange du flux */
         while(getchar() != '\n');
 
-        if (msg.typePiece < 1  || msg.typePiece > typePieceDif)
+        if (msg.typePiece < 0  || msg.typePiece >= typePieceDif)
         {
           printf("\ntype de pièce invalide\ntype de pièce n° : ");
         }
       }
-      while (msg.typePiece < 1  || msg.typePiece > typePieceDif);
+      while (msg.typePiece < 0  || msg.typePiece >= typePieceDif);
       msg.nbrPiece=1;
     }
     else
@@ -94,12 +94,12 @@ int main(int argc, char* argv[])
         /* vidange du flux */
         while(getchar() != '\n');
 
-        if (msg.typePiece < 1  || msg.typePiece > typePieceDif)
+        if (msg.typePiece < 0  || msg.typePiece >= typePieceDif)
         {
           printf("\ntype de pièce invalide\ntype de pièce n° : ");
         }
       }
-      while (msg.typePiece < 1  || msg.typePiece > typePieceDif);
+      while (msg.typePiece < 0  || msg.typePiece >= typePieceDif);
 
       printf("combien de pièces de type %d voulez vous ajouter ?\n",msg.typePiece);
       printf("nombre de pièces de type %d = ",msg.typePiece);

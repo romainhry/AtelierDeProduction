@@ -1,6 +1,7 @@
 #ifndef CONVOYEUR_H_
 #define CONVOYEUR_H_
 
+#define probaDefaillant 0.02
 
 #include <pthread.h>
 
@@ -29,7 +30,7 @@ struct convoyeur
 };
 
 //temps d'utilisation des bras d'alimentation/retrait
-void temps(int t);
+int temps(int t);
 
 //ajout d'une piece sur le convoyeur
 void init_convoyeur(struct convoyeur* myConvoyeur);

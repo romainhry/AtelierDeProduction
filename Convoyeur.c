@@ -7,7 +7,6 @@
 
 #include "Convoyeur.h"
 #include "Affichage.h"
-#define probaDefaillant 0.05
 
 //initialisation du convoyeur
 void init_convoyeur(struct convoyeur* myConvoyeur)
@@ -48,7 +47,7 @@ void alimente_convoyeur(piece pPiece, struct convoyeur* myConvoyeur, int tempsLi
 	myConvoyeur->last = m;
   if(temps(tempsLimite)==0)
   {
-    sprintf(MessageAfficher,"[Information] : Bras d'alimentation bloqué trop longtemps",op);
+    sprintf(MessageAfficher,"[Information] : Bras d'alimentation bloqué trop longtemps");
     affichageConsole(LigneInformation,MessageAfficher);
     kill(getpid(),SIGUSR1);
   }

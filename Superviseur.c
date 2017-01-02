@@ -33,7 +33,9 @@ void traitantSIGINT(int s)
 }
 
 void traitantDefaillance(int s){
-  printf("\nSysteme dans un état de défaillance, Veuillez redémarrer le système, les pièces non usinées sont perdues \n");
+  char MessageAfficher[200];
+  sprintf(MessageAfficher,"[Erreur] : Systeme dans un état de défaillance,");
+  affichageConsole(LigneErreur,MessageAfficher);
   if(pidOp!=0)
   {
     kill(pidOp,SIGUSR1);
@@ -137,7 +139,7 @@ int main(int argc,char* argv[])
     pthread_mutex_lock(&machines[typePieceCourrente].mutex);
 
     machines[typePieceCourrente].nbPiece++;
-    pthread_cond_signal(&machines[typePieceCourrente].attendre);
+    pthread_cond_signal(&machines[typePieceCourrente].attendre); //Dit à la machine qu'il y au moins une pièce pour elle
     pthread_mutex_unlock(&machines[typePieceCourrente].mutex);
 
   }

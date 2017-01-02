@@ -66,9 +66,12 @@ void* robotAlimentation(void* arg)
 		nouvellePiece.typePiece=msg.operation;
 		for (i=0; i<msg.nbrPiece; i++)
 		{
-			printf("~~~ RobotAlim : Piece en transit\n");
+			sprintf(MessageAfficher,"[Robot Alimentation] : piece en transit...");
+	    affichageConsole(LigneRobotAlim,MessageAfficher);
 			alimente_convoyeur(nouvellePiece, myConvoyeur, tempsLimiteRobotAlim);
 			v(semid);
+			sprintf(MessageAfficher,"[Robot Alimentation] : piece en déposée...");
+	    affichageConsole(LigneRobotAlim,MessageAfficher);
 		}
 		sprintf(MessageAfficher,"[Robot Alimentation] : %d pièces mises sur le convoyeur, opération : %d\n",msg.nbrPiece, nouvellePiece.typePiece);
 		affichageConsole(LigneRobotAlim,MessageAfficher);

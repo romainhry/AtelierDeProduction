@@ -26,7 +26,7 @@ void *fonctionnementMachine(void *machine_thread)
     pthread_mutex_lock(&machines->mutex);
 		if(machines->nbPiece>=1)
 		{
-          sprintf(MessageAfficher,"[Machine %d] : Reveil machine et retire pièce du convoyeur",machines->numeroMachine);
+          sprintf(MessageAfficher,"[Machine %d] : Retire pièce du convoyeur : pièce en transit",machines->numeroMachine);
           affichageConsole(machines->numeroMachine+5,MessageAfficher);
 
 		      struct maillon* maillon;
@@ -50,6 +50,8 @@ void *fonctionnementMachine(void *machine_thread)
 		 {
 		      pthread_cond_wait(&machines->attendre,&machines->mutex);
 		 }
+     sprintf(MessageAfficher,"[Machine %d] : Prête",machines->numeroMachine);
+     affichageConsole(machines->numeroMachine+5,MessageAfficher);
      pthread_mutex_unlock(&machines->mutex);
   }
 

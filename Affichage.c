@@ -37,7 +37,7 @@ void init_affichage(int nbrMachine)
 
 void affichageConsole (int depLigne,char * Message)
 {
-  //pthread_mutex_lock(&mutexAff);
+  pthread_mutex_lock(&mutexAff);
   int depLigneReel=10+nombreDeMachines-depLigne;
   printf("\033[%dA",depLigneReel); //Deplacement curseur en haut
   fflush(stdout);
@@ -50,5 +50,5 @@ void affichageConsole (int depLigne,char * Message)
   printf("\033[%dB",depLigneReel); //Deplacement curseur en  bas
   fflush(stdout);
   sleep(1);
-  //pthread_mutex_unlock(&mutexAff);
+  pthread_mutex_unlock(&mutexAff);
 }
