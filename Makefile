@@ -6,6 +6,9 @@
 
 
 # création de l'exécutable 'Programme'
+Test:
+	make mrproper && make Superviseur && make Operateur && make clean 
+
 Superviseur:  Superviseur.o Affichage.o GestionnaireMachines.o Convoyeur.o RobotAlimentation.o
 	gcc Superviseur.o Affichage.o GestionnaireMachines.o Convoyeur.o RobotAlimentation.o -o Superviseur -pthread
 

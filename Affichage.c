@@ -31,7 +31,6 @@ void init_affichage(int nbrMachine)
   }
   printf("\n[Robot de Retrait] : \n\n");
   printf("[Erreur] : Pas d'erreur\n\n");
-  printf("[Debug] : ");
   fflush(stdout);
 }
 
