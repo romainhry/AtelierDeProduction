@@ -13,6 +13,9 @@
 #include "Affichage.h"
 
 
+#define tempsLimiteTravail 10
+#define tempsLimiteRetrait 10
+
 void *fonctionnementMachine(void *machine_thread)
 {
   char MessageAfficher[200];
@@ -21,14 +24,13 @@ void *fonctionnementMachine(void *machine_thread)
   while(1)
   {
     pthread_mutex_lock(&machines->mutex);
-
 		if(machines->nbPiece>=1)
 		{
           sprintf(MessageAfficher,"[Machine %d] : Reveil machine et retire pièce du convoyeur",machines->numeroMachine);
           affichageConsole(machines->numeroMachine+5,MessageAfficher);
 
 		      struct maillon* maillon;
-		      maillon = retire_convoyeur(machines->myConvoyeur,machines->typeOperation);
+		      maillon = retire_convoyeur(machines->myConvoyeur,machines->typeOperation,tempsLimiteRetrait);
 		      machines->dispo=0;
 
           sprintf(MessageAfficher,"[Machine %d] : travaille %d secondes, effectue la tache : %d",machines->numeroMachine,machines->tempsUsinage,machines->typeOperation);
@@ -43,7 +45,6 @@ void *fonctionnementMachine(void *machine_thread)
 
 		      machines->nbPiece--;
 		      machines->dispo=1;
-
      }
 		 else
 		 {

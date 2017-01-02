@@ -9,6 +9,7 @@
 #include "Affichage.h"
 
 #define cle 314
+#define tempsLimiteRobotAlim 5
 
 
 
@@ -65,7 +66,8 @@ void* robotAlimentation(void* arg)
 		nouvellePiece.typePiece=msg.operation;
 		for (i=0; i<msg.nbrPiece; i++)
 		{
-			alimente_convoyeur(nouvellePiece, myConvoyeur);
+			printf("~~~ RobotAlim : Piece en transit\n");
+			alimente_convoyeur(nouvellePiece, myConvoyeur, tempsLimiteRobotAlim);
 			v(semid);
 		}
 		sprintf(MessageAfficher,"[Robot Alimentation] : %d pièces mises sur le convoyeur, opération : %d\n",msg.nbrPiece, nouvellePiece.typePiece);

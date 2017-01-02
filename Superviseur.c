@@ -32,6 +32,15 @@ void traitantSIGINT(int s)
   exit(0);
 }
 
+void traitantDefaillance(int s){
+  printf("\nSysteme dans un état de défaillance, Veuillez redémarrer le système, les pièces non usinées sont perdues \n");
+  if(pidOp!=0)
+  {
+    kill(pidOp,SIGUSR1);
+    kill(getpid(),SIGINT);
+  }
+}
+
 
 // Le main est le thread Superviseur
 int main(int argc,char* argv[])
@@ -42,6 +51,9 @@ int main(int argc,char* argv[])
   messageMachine msgMachine;
 
   signal(SIGINT,traitantSIGINT);
+
+  //defaillance
+  signal(SIGUSR1,traitantDefaillance);
 
   //Initialisation du convoyeur des pièces à usiner
   struct convoyeur myConvoyeur;

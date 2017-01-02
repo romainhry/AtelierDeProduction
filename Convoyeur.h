@@ -28,15 +28,17 @@ struct convoyeur
 	pthread_mutex_t mtx;
 };
 
+//temps d'utilisation des bras d'alimentation/retrait
+void temps(int t);
 
 //ajout d'une piece sur le convoyeur
 void init_convoyeur(struct convoyeur* myConvoyeur);
 
 //ajout d'une piece sur le convoyeur
-void alimente_convoyeur(piece pPiece, struct convoyeur* myConvoyeur);
+void alimente_convoyeur(piece pPiece, struct convoyeur* myConvoyeur, int tempsLimite);
 
 //lecture et suppression d'une piece en début de myConvoyeur
-struct maillon* retire_convoyeur(struct convoyeur* myConvoyeur,int op);
+struct maillon* retire_convoyeur(struct convoyeur* myConvoyeur,int op, int tempsLimite);
 
 //lecture d'une piece en début de myConvoyeur
 int typePiece_convoyeur(struct convoyeur* myConvoyeur);

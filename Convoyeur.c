@@ -2,9 +2,12 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <errno.h>
+#include <signal.h>
+#include <time.h>
 
 #include "Convoyeur.h"
 #include "Affichage.h"
+#define probaDefaillant 0.05
 
 //initialisation du convoyeur
 void init_convoyeur(struct convoyeur* myConvoyeur)
@@ -13,6 +16,7 @@ void init_convoyeur(struct convoyeur* myConvoyeur)
 	myConvoyeur->first = NULL;
 	myConvoyeur->last = NULL;
   myConvoyeur->curseur = NULL;
+  srand(time(NULL));
 	if(pthread_mutex_init(&myConvoyeur->mtx, NULL) == -1)
 	{
     sprintf(MessageAfficher,"[Erreur] : Initialisation du mutex");
@@ -22,7 +26,7 @@ void init_convoyeur(struct convoyeur* myConvoyeur)
 
 
 //ajout d'une piece sur le convoyeur
-void alimente_convoyeur(piece pPiece, struct convoyeur* myConvoyeur)
+void alimente_convoyeur(piece pPiece, struct convoyeur* myConvoyeur, int tempsLimite)
 {
   char MessageAfficher[200];
 	if(pthread_mutex_lock(&myConvoyeur->mtx) == -1)
@@ -42,6 +46,12 @@ void alimente_convoyeur(piece pPiece, struct convoyeur* myConvoyeur)
 		(myConvoyeur->last)->next = m;
 	}
 	myConvoyeur->last = m;
+  if(temps(tempsLimite)==0)
+  {
+    sprintf(MessageAfficher,"[Information] : Bras d'alimentation bloqué trop longtemps",op);
+    affichageConsole(LigneInformation,MessageAfficher);
+    kill(getpid(),SIGUSR1);
+  }
 	if(pthread_mutex_unlock(&myConvoyeur->mtx) == -1)
 	{
     sprintf(MessageAfficher,"[Erreur] : Déverrouillage du mutex");
@@ -49,9 +59,27 @@ void alimente_convoyeur(piece pPiece, struct convoyeur* myConvoyeur)
 	}
 }
 
+//temps d'utilisation des bras d'alimentation/retrait
+int temps(int t)
+{
+  t = t * 1000000;
+  int temps = rand()%(int)(t+(probaDefaillant*t)); //microsecondes
+  if(temps > t)
+  {
+    usleep(t);
+    return 0;
+
+  }
+  else {
+    usleep(temps);
+    return 1;
+  }
+
+}
+
 
 //lecture et suppression d'un maillon en début de myConvoyeur
-struct maillon* retire_convoyeur(struct convoyeur* myConvoyeur,int op)
+struct maillon* retire_convoyeur(struct convoyeur* myConvoyeur,int op, int tempsLimite)
 {
   char MessageAfficher[200];
 	if(pthread_mutex_lock(&myConvoyeur->mtx) == -1)
@@ -81,7 +109,12 @@ struct maillon* retire_convoyeur(struct convoyeur* myConvoyeur,int op)
       myConvoyeur->curseur=tmp;
   }
 
-
+  if(temps(tempsLimite)==0)
+  {
+    sprintf(MessageAfficher,"[Information] : Bras de retrait de la machine %d bloqué trop longtemps",op);
+    affichageConsole(LigneInformation,MessageAfficher);
+    kill(getpid(),SIGUSR1);
+  }
 	if(pthread_mutex_unlock(&myConvoyeur->mtx) == -1)
 	{
     char MessageAfficher[200];
