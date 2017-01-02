@@ -52,26 +52,13 @@ void* robotAlimentation(void* arg)
 		{
 			erreur("Reception de message");
 		}
-		if (msg.nbrPiece == 1)
+		nouvellePiece.typePiece=msg.operation;
+		for (i=0; i<msg.nbrPiece; i++)
 		{
-    		nouvellePiece.typePiece=msg.operation;
-		//on ajoute la piece reçue à la file d'attente
-		alimente_convoyeur(nouvellePiece, myConvoyeur);
-		v(semid);
-		printf("~~~ S : nouvelle pièce mise sur le convoyeur, opération : %d\n", nouvellePiece.typePiece);
-		}
-		else
-		{
-			for (i=0; i<msg.nbrPiece; i++)
-			{
-			nouvellePiece.typePiece=msg.operation;
 			alimente_convoyeur(nouvellePiece, myConvoyeur);
 			v(semid);
-			}
-
-			printf("~~~ S : %d pièces mises sur le convoyeur, opération : %d\n",msg.nbrPiece, nouvellePiece.typePiece);
 		}
-
+		printf("~~~ RobotAlim : %d pièces mises sur le convoyeur, opération : %d\n",msg.nbrPiece, nouvellePiece.typePiece);
 	}
 
 	printf("~~~ S : terminaison du thread robotAlimentation\n");

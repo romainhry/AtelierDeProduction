@@ -24,6 +24,7 @@ void init_convoyeur(struct convoyeur* myConvoyeur)
 	}
 }
 
+
 //ajout d'une piece sur le convoyeur
 void alimente_convoyeur(piece pPiece, struct convoyeur* myConvoyeur)
 {
@@ -49,6 +50,7 @@ void alimente_convoyeur(piece pPiece, struct convoyeur* myConvoyeur)
 	}
 }
 
+
 //lecture et suppression d'un maillon en début de myConvoyeur
 struct maillon* retire_convoyeur(struct convoyeur* myConvoyeur,int op)
 {
@@ -59,23 +61,31 @@ struct maillon* retire_convoyeur(struct convoyeur* myConvoyeur,int op)
 	struct maillon* m;
   struct maillon* tmp= NULL;
 	m = myConvoyeur->first;
+
+  //Cherche la pièce en question
 	while(m->obj.typePiece != op)
 	{
     tmp = m;
     m = m->next;
 	}
-  if(tmp != NULL) {
+
+  //Reforme la chaine
+  if(myConvoyeur->first==m) {
+    myConvoyeur->first=m->next;
+  }
+  else
+  {
     tmp->next = m->next;
     if(myConvoyeur->curseur==m)
       myConvoyeur->curseur=tmp;
   }
-  else {
-    myConvoyeur->first=NULL;
-  }
+
+
 	if(pthread_mutex_unlock(&myConvoyeur->mtx) == -1)
 	{
 		erreur("Déverrouillage du mutex");
 	}
+
 	return m;
 }
 

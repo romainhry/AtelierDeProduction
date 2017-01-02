@@ -24,7 +24,7 @@ typedef struct
 int main(int argc, char* argv[])
 {
 
-  if(argc-1 != 1)
+  if(argc-1 != 1 )
   {
       perror("Veuillez passer un nombre de machines en argument");
   }
