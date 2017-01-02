@@ -10,11 +10,11 @@ void p(int semid);
 void v(int semid);
 
 
-typedef struct 
+typedef struct
 {
   long type;
   int operation;
-  int nbrPiece; 
+  int nbrPiece;
 }messageOperateur;
 
 //thread communiquant avec le superviseur : attend des nouvelles pièces

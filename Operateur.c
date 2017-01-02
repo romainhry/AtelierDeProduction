@@ -12,45 +12,47 @@
 
 #include "Operateur.h"
 
-
-//structure de données qui sera envoyée via une file de messages IPC
-typedef struct
+void traitantSIGUSR(int s)
 {
-  long type;
-  int typePiece;
-  int nbrPiece;
-} message;
+  printf("\n\nLe superviseur c'est arretté\nFin de l'opérateur\n");
+  exit(0);
+}
 
 int main(int argc, char* argv[])
 {
+  int choix;
+  message msg;	//Message transmit à RobotAlimentation qui contient les types de pièce, nbr, etc..
+  messageMachine msgMachine; //Message transmet au Superviseur qui contient le nombre de Machines à initialiser
 
-  if(argc-1 != 1 )
+  signal(SIGUSR1,traitantSIGUSR);
+  if(argc-1 != 1)
   {
-      perror("Veuillez passer un nombre de machines en argument");
+      perror("\nVeuillez passer un nombre de machines en argument\n");
   }
 
-  int choix;
-  message msg;	//Message transmit à RobotAlimentation qui contient les types de pièce, nbr etc..
-  msg.type=1;
-  messageMachine msgMachine; //Message transmet au Superviseur qui contient le nombre de Machines à initialiser
-  msgMachine.type=1;
 
-  msgMachine.nbrMachine=atoi(argv[1]); //Nombre de machines à initialiser
-  int typePieceDif=msgMachine.nbrMachine;  //On change de nom juste pour la compréhension
 
   int msqid = msgget(cle, 0);
   if(msqid == -1) //file non existante
   {
-    perror("Superviseur inexistant, file de message inexistante");
+    perror("\nSuperviseur inexistant, file de message inexistante\n");
     exit(1);
   }
 
+
+  //Informe sur le nombre de machine voulu et du pid
+  msgMachine.type=1;
+  msgMachine.nbrMachine=atoi(argv[1]); //Nombre de machines à initialiser
+  msgMachine.pid=getpid();
+  int typePieceDif=msgMachine.nbrMachine;  //On change de nom juste pour la compréhension
   if(msgsnd(msqid, &msgMachine, (sizeof(messageMachine)-sizeof(long)), 0) == -1)
   {
     perror("Envoi de message");
     exit(1);
   }
 
+  //Informe des nouvelles pièces
+  msg.type=1;
   while(1)
   {
     do
