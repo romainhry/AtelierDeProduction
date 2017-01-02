@@ -3,6 +3,9 @@
 
 #include "Convoyeur.h"
 
+#define MARCHE		1
+#define PANNE		0
+
 typedef struct
 {
   struct convoyeur * myConvoyeur;

@@ -10,7 +10,7 @@
 #include <errno.h>
 #include <signal.h>
 
-
+#include "Affichage.h"
 #include "Convoyeur.h"
 #include "GestionnaireMachines.h"
 #include "RobotAlimentation.h"
@@ -36,6 +36,7 @@ void traitantSIGINT(int s)
 // Le main est le thread Superviseur
 int main(int argc,char* argv[])
 {
+  char MessageAfficher[200];
   printf("\n");
   pidOp =0;
   messageMachine msgMachine;
@@ -48,38 +49,44 @@ int main(int argc,char* argv[])
   init_convoyeur(&myConvoyeur);
 
   //Initialisation de file de messages
-
   //File Message Piece
 	msgid = msgget(cle, 0);
 	if(msgid != -1) //file existante donc suppression
 	{
 		if(msgctl(msgid, IPC_RMID, NULL) == -1)
 		{
-			erreur("Suppression file");
+      sprintf(MessageAfficher,"[Erreur] : Suppression file");
+      affichageConsole(LigneErreur,MessageAfficher);
 		}
 	}
 	msgid = msgget(cle, IPC_CREAT | 0600); //création de la file
 	if(msgid == -1)
 	{
-		erreur("Création file");
+    sprintf(MessageAfficher,"[Erreur] : Création file");
+    affichageConsole(LigneErreur,MessageAfficher);
 	}
-
-	printf("Attente d'informations de l'opérateur\n");
-
+  nombreDeMachines=0;
+  sprintf(MessageAfficher,"\n[Information] : Attente d'informations de l'opérateur");
+  affichageConsole(10,MessageAfficher);
 	//Recepetion du nombre de machines à initialiser
 	if((msgrcv(msgid, &msgMachine, (sizeof(msgMachine)-sizeof(long)), 1, 0)) == -1)
 	{
-		erreur("Reception de message");
+    sprintf(MessageAfficher,"[Erreur] : Reception de message");
+    affichageConsole(LigneErreur,MessageAfficher);
 	}
   pidOp = msgMachine.pid;
-	printf("L'opérateur souhaite %d machines différentes\n",msgMachine.nbrMachine);
+
 
   // initialisation des machines
-  int nbMachines=msgMachine.nbrMachine;
-  Machine machines[nbMachines];
-  pthread_t thread_Machines[nbMachines];
-  creationMachines(nbMachines, (pthread_t *)&thread_Machines, (Machine *)&machines, &myConvoyeur);
+  nombreDeMachines=msgMachine.nbrMachine;
+  Machine machines[nombreDeMachines];
+  pthread_t thread_Machines[nombreDeMachines];
+  creationMachines(nombreDeMachines, (pthread_t *)&thread_Machines, (Machine *)&machines, &myConvoyeur);
 
+  init_affichage(nombreDeMachines);
+
+  sprintf(MessageAfficher,"[Information] : L'opérateur souhaite %d machines différentes\n",msgMachine.nbrMachine);
+  affichageConsole(LigneInformation,MessageAfficher);
 
   int nb_threads_occupes = 0;
 
@@ -87,19 +94,23 @@ int main(int argc,char* argv[])
 
   if ((semid = semget(IPC_PRIVATE, 1, IPC_CREAT | 0600)) == -1)
   {
-    erreur("Déclaration de la sémaphore de réception principale");
+    sprintf(MessageAfficher,"[Erreur] : Déclaration de la sémaphore de réception principale");
+    affichageConsole(LigneErreur,MessageAfficher);
   }
   if (semctl(semid, 0, SETVAL, 0) == -1)
   {
-    erreur("Initialisation de la sémaphore de réception principale");
+    sprintf(MessageAfficher,"[Erreur] : Initialisation de la sémaphore de réception principale");
+    affichageConsole(LigneErreur,MessageAfficher);
   }
   pthread_t t_robotAlimentation;
   if(pthread_create(&t_robotAlimentation, NULL, &robotAlimentation, &myConvoyeur) != 0)
   {
-    erreur("Création thread robotAlimentation");
+    sprintf(MessageAfficher,"[Erreur] : Création thread robotAlimentation");
+    affichageConsole(LigneErreur,MessageAfficher);
   }
 
-  printf("~~ M : création du thread robotAlimentation\n");
+  sprintf(MessageAfficher,"[Robot Alimentation] : création du thread");
+  affichageConsole(LigneRobotAlim,MessageAfficher);
 
   int arret = 0;
 
@@ -107,10 +118,7 @@ int main(int argc,char* argv[])
 
   while(!arret)
   {
-    printf("~~ M : en attente de pièces...\n");
     p(semid);
-    printf("~~ M : Pièce mise sur convoyeur ...\n");
-
 
     typePieceCourrente = typePiece_convoyeur(&myConvoyeur); //récupère une pièce du convoyeur
 

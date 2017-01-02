@@ -9,6 +9,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <signal.h>
 
 #include "Operateur.h"
 
@@ -21,7 +22,7 @@ void traitantSIGUSR(int s)
 int main(int argc, char* argv[])
 {
   int choix;
-  message msg;	//Message transmit à RobotAlimentation qui contient les types de pièce, nbr, etc..
+  message msg ;	//Message transmit à RobotAlimentation qui contient les types de pièce, nbr, etc..
   messageMachine msgMachine; //Message transmet au Superviseur qui contient le nombre de Machines à initialiser
 
   signal(SIGUSR1,traitantSIGUSR);

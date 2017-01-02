@@ -10,14 +10,12 @@
 #include <errno.h>
 
 #include "GestionnaireMachines.h"
-
-#define MARCHE		1
-#define PANNE		0
+#include "Affichage.h"
 
 
 void *fonctionnementMachine(void *machine_thread)
 {
-  int testInterblocage=0;  //A supprimer à la fin des tests
+  char MessageAfficher[200];
   char * marchePanne;
   Machine * machines=(Machine *) machine_thread;
   while(1)
@@ -26,15 +24,23 @@ void *fonctionnementMachine(void *machine_thread)
 
 		if(machines->nbPiece>=1)
 		{
-		      printf("Reveil machine %d et retire pièce du convoyeur\n",machines->numeroMachine);
+          sprintf(MessageAfficher,"[Machine %d] : Reveil machine et retire pièce du convoyeur",machines->numeroMachine);
+          affichageConsole(machines->numeroMachine+5,MessageAfficher);
+
 		      struct maillon* maillon;
 		      maillon = retire_convoyeur(machines->myConvoyeur,machines->typeOperation);
 		      machines->dispo=0;
-		      printf("[Machine numero : %d ] va travailler : %d secondes, effectuer la tache : %d\n",machines->numeroMachine,machines->tempsUsinage,machines->typeOperation);
+
+          sprintf(MessageAfficher,"[Machine %d] : travaille %d secondes, effectue la tache : %d",machines->numeroMachine,machines->tempsUsinage,machines->typeOperation);
+          affichageConsole(machines->numeroMachine+5,MessageAfficher);
+
           pthread_mutex_unlock(&machines->mutex);
           sleep(machines->tempsUsinage);
           pthread_mutex_lock(&machines->mutex);
-		      printf("[Machine numero : %d ] à fini de travailler\n",machines->numeroMachine);
+
+          sprintf(MessageAfficher,"[Machine %d] : a fini de travailler",machines->numeroMachine);
+          affichageConsole(machines->numeroMachine+5,MessageAfficher);
+
 		      machines->nbPiece--;
 		      machines->dispo=1;
 
@@ -52,19 +58,21 @@ void *fonctionnementMachine(void *machine_thread)
 
 void creationMachines(int nbMachines, pthread_t * threads, Machine * machines , struct convoyeur * conv)
 {
-
+  char MessageAfficher[200];
   pthread_attr_t thread_attr;
   int t;
 
 
   if (pthread_attr_init (&thread_attr) != 0)
   {
-    perror("pthread_attr_init error\n");
+    sprintf(MessageAfficher,"[Erreur] : pthread_attr_init error");
+    affichageConsole(LigneErreur,MessageAfficher);
     exit (1);
   }
   if (pthread_attr_setdetachstate (&thread_attr, PTHREAD_CREATE_DETACHED) != 0)
   {
-    perror("pthread_attr_setdetachstate error\n");
+    sprintf(MessageAfficher,"[Erreur] : pthread_attr_setdetachstate error");
+    affichageConsole(LigneErreur,MessageAfficher);
     exit (1);
   }
 
@@ -79,21 +87,24 @@ void creationMachines(int nbMachines, pthread_t * threads, Machine * machines , 
     machines[t].nbPiece=0;
 
     if(pthread_mutex_init(&machines[t].mutex, NULL) == -1)
-	{
-  		perror("Initialisation mutex de synchro de machine\n");
+	  {
+      sprintf(MessageAfficher,"[Erreur] : Initialisation mutex de synchro de machine");
+      affichageConsole(LigneErreur,MessageAfficher);
   		exit(1);
   	}
 
     if(pthread_cond_init(&machines[t].attendre, NULL) == -1)
-	{
-  		perror("Initialisation mutex d'attente de machine\n");
+	  {
+      sprintf(MessageAfficher,"[Erreur] : Initialisation mutex d'attente de machine");
+      affichageConsole(LigneErreur,MessageAfficher);
   		exit(1);
   	}
 
     if (pthread_create(&threads[t], &thread_attr, fonctionnementMachine, (void *)&machines[t]) == 1)
     {
-      perror("Erreur Creation Threads\n");
-      exit(-1);
+      sprintf(MessageAfficher,"[Erreur] : Erreur Creation Threads");
+      affichageConsole(LigneErreur,MessageAfficher);
+      exit(1);
     }
 
   }

@@ -1,14 +1,17 @@
 # définition des cibles particulières
 .PHONY: clean, mrproper
- 
+
 # désactivation des règles implicites
 .SUFFIXES:
- 
- 
+
+
 # création de l'exécutable 'Programme'
-Superviseur: Superviseur.o GestionnaireMachines.o Convoyeur.o RobotAlimentation.o
-	gcc Superviseur.o GestionnaireMachines.o Convoyeur.o RobotAlimentation.o -o Superviseur -pthread
- 
+Superviseur:  Superviseur.o Affichage.o GestionnaireMachines.o Convoyeur.o RobotAlimentation.o
+	gcc Superviseur.o Affichage.o GestionnaireMachines.o Convoyeur.o RobotAlimentation.o -o Superviseur -pthread
+
+Affichage.o: Affichage.c
+	gcc -c Affichage.c -o Affichage.o
+
 Superviseur.o: Superviseur.c
 	gcc -c Superviseur.c -o Superviseur.o
 
@@ -30,7 +33,7 @@ Operateur.o: Operateur.c
 # suppression des fichiers temporaires
 clean:
 	rm -rf *.bak rm -rf *.o
- 
+
 # suppression de tous les fichiers, sauf les sources,
 # en vue d'une reconstruction complète
 mrproper: clean
