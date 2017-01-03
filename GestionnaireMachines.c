@@ -17,7 +17,7 @@
 
 #define tempsLimiteTravail 40
 #define tempsLimiteRetrait 10
-#define probaMachineDefaillant 0.5
+#define probaMachineDefaillant 0.02
 #define ligneMachine machines->numeroMachine+5
 
 void *fonctionnementMachine(void *machine_thread)
