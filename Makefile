@@ -9,8 +9,8 @@
 Test:
 	make mrproper && make Superviseur && make Operateur && make clean
 
-Superviseur:  Superviseur.o Affichage.o GestionnaireMachines.o Convoyeur.o RobotRetrait.o RobotAlimentation.o
-	gcc Superviseur.o Affichage.o GestionnaireMachines.o Convoyeur.o RobotRetrait.o RobotAlimentation.o -o Superviseur -pthread
+Superviseur:  Superviseur.o Affichage.o GestionnaireMachines.o Convoyeur.o RobotRetrait.o RobotAlimentation.o Rapport.o
+	gcc Superviseur.o Affichage.o GestionnaireMachines.o Convoyeur.o RobotRetrait.o RobotAlimentation.o Rapport.o -o Superviseur -pthread
 
 Affichage.o: Affichage.c
 	gcc -c Affichage.c -o Affichage.o
@@ -29,6 +29,9 @@ RobotRetrait.o: RobotRetrait.c
 
 RobotAlimentation.o: RobotAlimentation.c
 	gcc -c RobotAlimentation.c -o RobotAlimentation.o
+
+Rapport.o: Rapport.c
+	gcc -c Rapport.c -o Rapport.o
 
 Operateur: Operateur.o
 	gcc Operateur.o -o Operateur

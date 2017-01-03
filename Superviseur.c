@@ -16,7 +16,7 @@
 #include "RobotAlimentation.h"
 #include "RobotRetrait.h"
 #include "Operateur.h"
-
+#include "Rapport.h"
 
 int pidOp;
 
@@ -146,6 +146,9 @@ int main(int argc,char* argv[])
     sprintf(MessageAfficher,"[Erreur] : Création thread robotRetrait");
     affichageConsole(LigneErreur,MessageAfficher);
   }
+
+  //Création d'un nouveau Rapport
+  NouveauRapport();
 
   int arret = 0;
 

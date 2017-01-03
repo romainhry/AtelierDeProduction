@@ -13,7 +13,7 @@
 #include "GestionnaireMachines.h"
 #include "Affichage.h"
 #include "RobotAlimentation.h"
-
+#include "Rapport.h"
 
 #define tempsLimiteTravail 40
 #define tempsLimiteRetrait 10
@@ -31,13 +31,16 @@ void *fonctionnementMachine(void *machine_thread)
   {
     pthread_mutex_lock(&machines->mutex);
 
-
 		if(machines->nbPiece>=1)
 		{
       if(machines->etatFonctionnement==PANNE)
       {
         sprintf(MessageAfficher,"[Information] : Pièce déstinée à machine en panne : defaillance");
         affichageConsole(LigneInformation,MessageAfficher);
+
+        sprintf(MessageAfficher,"[Information] : Pièce déstinée à machine en panne : defaillance\n");
+        EcrireRapport(MessageAfficher);
+
         kill(getpid(),SIGUSR1);
         pthread_exit(0);
       }
@@ -66,8 +69,15 @@ void *fonctionnementMachine(void *machine_thread)
         sprintf(MessageAfficher,"[Machine %d] : Arrette de travailler, temps de travail trop élevé",machines->numeroMachine);
         affichageConsole(ligneMachine,MessageAfficher);
 
+        sprintf(MessageAfficher,"[Machine %d] : Arrette de travailler, temps de travail trop élevé\n",machines->numeroMachine);
+        EcrireRapport(MessageAfficher);
+
+
         sprintf(MessageAfficher,"[Machine %d] : En panne",machines->numeroMachine);
         affichageConsole(ligneMachine,MessageAfficher);
+
+        sprintf(MessageAfficher,"[Machine %d] : En panne\n",machines->numeroMachine);
+        EcrireRapport(MessageAfficher);
 
         machines->etatFonctionnement=PANNE;
         maillon->obj.fini=-1;
@@ -80,6 +90,8 @@ void *fonctionnementMachine(void *machine_thread)
         myPiece.fini=1;
         sprintf(MessageAfficher,"[Machine %d] : A travaillé %d secondes",machines->numeroMachine,temps/1000000);
         affichageConsole(ligneMachine,MessageAfficher);
+        sprintf(MessageAfficher,"Pièce type %d : Usinée en %d secondes\n",machines->numeroMachine,temps/1000000);
+        EcrireRapport(MessageAfficher);
 
         sprintf(MessageAfficher,"[Machine %d] : Pièce en transit vers convoyeur...",machines->numeroMachine);
   	    affichageConsole(ligneMachine,MessageAfficher);

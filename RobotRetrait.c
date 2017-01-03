@@ -2,6 +2,7 @@
 
 #include "RobotRetrait.h"
 #include "Affichage.h"
+#include "Rapport.h"
 
 //thread communiquant avec le superviseur : attend des nouvelles pièces
 void* robotRetrait(void* arg)
@@ -30,9 +31,10 @@ void* robotRetrait(void* arg)
       affichageConsole(LigneRobotRetrait,MessageAfficher);
 
       // TODO : Creation rapport
+      
 
       nbPieceFini--;
-      
+
       sprintf(MessageAfficher,"[Robot de Retrait] : Prêt");
       affichageConsole(LigneRobotRetrait,MessageAfficher);
      }
