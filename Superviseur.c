@@ -81,7 +81,7 @@ int main(int argc,char* argv[])
 	}
   nombreDeMachines=0;
   sprintf(MessageAfficher,"\n[Information] : Attente d'informations de l'opérateur");
-  affichageConsole(10,MessageAfficher);
+  affichageConsole(2,MessageAfficher);
 	//Recepetion du nombre de machines à initialiser
 	if((msgrcv(msgid, &msgMachine, (sizeof(msgMachine)-sizeof(long)), 1, 0)) == -1)
 	{
@@ -161,8 +161,6 @@ int main(int argc,char* argv[])
 
     pieceCourrente = getPiece_convoyeur(&myConvoyeur); //récupère une pièce du convoyeur
 
-
-
     if(pieceCourrente.fini==0)
     {
       int typePieceCourrente=pieceCourrente.typePiece;
@@ -172,6 +170,10 @@ int main(int argc,char* argv[])
       {
         sprintf(MessageAfficher,"[Information] : Pièce déstinée à machine en panne : defaillance");
         affichageConsole(LigneInformation,MessageAfficher);
+
+        sprintf(MessageAfficher,"Pièce [%d] de type : %d Déstinée à machine en panne : Défaillance\n",pieceCourrente.identifiant,pieceCourrente.typePiece);
+        EcrireRapport(MessageAfficher);
+
         kill(getpid(),SIGUSR1);
       }
 

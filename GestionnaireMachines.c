@@ -18,7 +18,7 @@
 #define tempsLimiteTravail 40
 #define tempsLimiteRetrait 10
 #define probaMachineDefaillant 0.02
-#define ligneMachine machines->numeroMachine+5
+
 
 void *fonctionnementMachine(void *machine_thread)
 {
@@ -33,12 +33,16 @@ void *fonctionnementMachine(void *machine_thread)
 
 		if(machines->nbPiece>=1)
 		{
+
+      struct maillon* maillon;
+      maillon = retire_convoyeur(machines->myConvoyeur,machines->typeOperation,tempsLimiteRetrait);
+
       if(machines->etatFonctionnement==PANNE)
       {
         sprintf(MessageAfficher,"[Information] : Pièce déstinée à machine en panne : defaillance");
         affichageConsole(LigneInformation,MessageAfficher);
 
-        sprintf(MessageAfficher,"[Information] : Pièce déstinée à machine en panne : defaillance\n");
+        sprintf(MessageAfficher,"\nPièce [%d] : Pièce déstinée à machine en panne : defaillance\n",maillon->obj.identifiant);
         EcrireRapport(MessageAfficher);
 
         kill(getpid(),SIGUSR1);
@@ -48,8 +52,6 @@ void *fonctionnementMachine(void *machine_thread)
       sprintf(MessageAfficher,"[Machine %d] : Retire pièce du convoyeur : pièce en transit",machines->numeroMachine);
       affichageConsole(ligneMachine,MessageAfficher);
 
-      struct maillon* maillon;
-      maillon = retire_convoyeur(machines->myConvoyeur,machines->typeOperation,tempsLimiteRetrait);
       machines->dispo=0;
 
       sprintf(MessageAfficher,"[Machine %d] : Travaille",machines->numeroMachine);
@@ -81,8 +83,10 @@ void *fonctionnementMachine(void *machine_thread)
 
         machines->etatFonctionnement=PANNE;
         maillon->obj.fini=-1;
+        maillon->obj.tempsUsinage=tempsLimiteTravail;
       }
-      else {
+      else
+      {
         pthread_mutex_unlock(&machines->mutex);
         usleep(temps);
         pthread_mutex_lock(&machines->mutex);
@@ -90,12 +94,10 @@ void *fonctionnementMachine(void *machine_thread)
         myPiece.fini=1;
         sprintf(MessageAfficher,"[Machine %d] : A travaillé %d secondes",machines->numeroMachine,temps/1000000);
         affichageConsole(ligneMachine,MessageAfficher);
-        sprintf(MessageAfficher,"Pièce type %d : Usinée en %d secondes\n",machines->numeroMachine,temps/1000000);
-        EcrireRapport(MessageAfficher);
 
         sprintf(MessageAfficher,"[Machine %d] : Pièce en transit vers convoyeur...",machines->numeroMachine);
   	    affichageConsole(ligneMachine,MessageAfficher);
-
+        myPiece.tempsUsinage=(int)(temps/1000000);
   			alimente_convoyeur(myPiece, machines->myConvoyeur, 0);
 
   			sprintf(MessageAfficher,"[Machine %d] : Pièce déposée...",machines->numeroMachine);
@@ -105,6 +107,7 @@ void *fonctionnementMachine(void *machine_thread)
 
         sprintf(MessageAfficher,"[Machine %d] : Prête",machines->numeroMachine);
         affichageConsole(machines->numeroMachine+5,MessageAfficher);
+
       }
 
       machines->nbPiece--;

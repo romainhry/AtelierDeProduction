@@ -7,6 +7,7 @@
 
 #include "Convoyeur.h"
 #include "Affichage.h"
+#include "Rapport.h"
 
 //initialisation du convoyeur
 void init_convoyeur(struct convoyeur* myConvoyeur)
@@ -55,6 +56,8 @@ void alimente_convoyeur(piece pPiece, struct convoyeur* myConvoyeur, int tempsLi
     {
       sprintf(MessageAfficher,"[Information] : Bras d'alimentation bloqué trop longtemps");
       affichageConsole(LigneInformation,MessageAfficher);
+      sprintf(MessageAfficher,"\nBras d'alimentation bloqué trop longtemps : Défaillance\n");
+      EcrireRapport(MessageAfficher);
       kill(getpid(),SIGUSR1);
     }
   }
@@ -134,6 +137,9 @@ struct maillon* retire_convoyeur(struct convoyeur* myConvoyeur,int op, int temps
     {
       sprintf(MessageAfficher,"[Information] : Bras de retrait de la machine %d bloqué trop longtemps",op);
       affichageConsole(LigneInformation,MessageAfficher);
+      sprintf(MessageAfficher,"\nBras de retrait de la machine %d bloqué trop longtemps\n",op);
+      EcrireRapport(MessageAfficher);
+
       kill(getpid(),SIGUSR1);
       pthread_exit(0);
     }

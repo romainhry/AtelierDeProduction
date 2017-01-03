@@ -7,9 +7,10 @@ int nombreDeMachines;
 pthread_mutex_t mutexAff;
 
 
-#define LigneErreur 18
-#define LigneInformation 1
-#define LigneRobotRetrait 16
-#define LigneRobotAlim 3
+#define LigneErreur 2
+#define LigneInformation nombreDeMachines+9
+#define LigneRobotRetrait 4
+#define LigneRobotAlim nombreDeMachines+7
+#define ligneMachine machines->numeroMachine+5
 
 #endif

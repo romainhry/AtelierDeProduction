@@ -8,6 +8,7 @@
 
 #include "Affichage.h"
 
+
 void p(int semid) //prologue
 {
 	char MessageAfficher[200];
@@ -42,6 +43,7 @@ void* robotAlimentation(void* arg)
 {
 	char MessageAfficher[200];
   int i=0;
+	int cptPiece=0;
   messageOperateur msg;
 
   struct convoyeur* myConvoyeur = arg;
@@ -64,6 +66,7 @@ void* robotAlimentation(void* arg)
 		nouvellePiece.fini=0;
 		for (i=0; i<msg.nbrPiece; i++)
 		{
+			nouvellePiece.identifiant=cptPiece++;
 			sprintf(MessageAfficher,"[Robot Alimentation] : pièce en transit...");
 	    affichageConsole(LigneRobotAlim,MessageAfficher);
 
@@ -72,9 +75,7 @@ void* robotAlimentation(void* arg)
 			sprintf(MessageAfficher,"[Robot Alimentation] : pièce déposée...");
 	    affichageConsole(LigneRobotAlim,MessageAfficher);
 
-
 			v(semid); // signal au superviseur que la piece est posée
-
 		}
 		sprintf(MessageAfficher,"[Robot Alimentation] : %d pièces mises sur le convoyeur, opération : %d\n",msg.nbrPiece, nouvellePiece.typePiece);
 		affichageConsole(LigneRobotAlim,MessageAfficher);

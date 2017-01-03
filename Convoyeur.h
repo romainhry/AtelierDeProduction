@@ -12,6 +12,8 @@ typedef struct
   int typePiece;
   char rapport[200];
   int fini;
+  int identifiant;
+  int tempsUsinage;
 } piece;
 
 

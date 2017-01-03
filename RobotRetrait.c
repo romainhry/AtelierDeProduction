@@ -17,8 +17,6 @@ void* robotRetrait(void* arg)
   {
     pthread_mutex_lock(&mutex_RobotRetrait);
 
-
-
     if(nbPieceFini>=1)
     {
       sprintf(MessageAfficher,"[Robot de Retrait] : Retire pièce du convoyeur : pièce en transit");
@@ -27,11 +25,13 @@ void* robotRetrait(void* arg)
       struct maillon* maillon;
       maillon = retire_convoyeur(myConvoyeur,-1,0);
 
-      sprintf(MessageAfficher,"[Robot de Retrait] : Création du rapport");
+      sprintf(MessageAfficher,"[Robot de Retrait] : Rapport pièce");
       affichageConsole(LigneRobotRetrait,MessageAfficher);
 
+      sprintf(MessageAfficher,"Pièce [%d] de type : %d Temps d'usinage : %d\n",maillon->obj.identifiant,maillon->obj.typePiece,maillon->obj.tempsUsinage);
+      EcrireRapport(MessageAfficher);
       // TODO : Creation rapport
-      
+
 
       nbPieceFini--;
 
