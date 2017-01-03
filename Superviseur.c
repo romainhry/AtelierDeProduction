@@ -24,7 +24,6 @@ void traitantSIGINT(int s)
 {
   semctl(semid, 0, IPC_RMID, 0);
   msgctl(msgid,IPC_RMID,NULL);
-  msgctl(msgid_op,IPC_RMID,NULL);
   if(pidOp!=0)
   {
     kill(pidOp,SIGUSR1);

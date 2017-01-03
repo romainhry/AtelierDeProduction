@@ -3,6 +3,9 @@
 
 #include "Convoyeur.h"
 
+#define cle 314
+#define tempsLimiteRobotAlim 5
+
 
 int msgid, semid ;
 

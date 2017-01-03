@@ -73,7 +73,6 @@ int temps(int t)
     usleep(temps);
     return 1;
   }
-
 }
 
 

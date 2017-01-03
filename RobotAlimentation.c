@@ -8,11 +8,6 @@
 
 #include "Affichage.h"
 
-#define cle 314
-#define tempsLimiteRobotAlim 5
-
-
-
 void p(int semid) //prologue
 {
 	char MessageAfficher[200];
