@@ -158,8 +158,6 @@ int main(int argc,char* argv[])
 
     pieceCourrente = getPiece_convoyeur(&myConvoyeur); //récupère une pièce du convoyeur
 
-    sprintf(MessageAfficher,"[Erreur] : maPiece : %d\n",pieceCourrente.fini);
-    affichageConsole(LigneErreur,MessageAfficher);
 
 
     if(pieceCourrente.fini==0)
@@ -175,6 +173,7 @@ int main(int argc,char* argv[])
       }
 
       machines[typePieceCourrente].nbPiece++;
+
       pthread_cond_signal(&machines[typePieceCourrente].attendre); //Dit à la machine qu'il y au moins une pièce pour elle
       pthread_mutex_unlock(&machines[typePieceCourrente].mutex);
     }

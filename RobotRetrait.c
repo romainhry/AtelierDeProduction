@@ -8,9 +8,14 @@ void* robotRetrait(void* arg)
 {
   char MessageAfficher[200];
   struct convoyeur* myConvoyeur = arg;
+
+  sprintf(MessageAfficher,"[Robot de Retrait] : Prêt");
+  affichageConsole(LigneRobotRetrait,MessageAfficher);
+
   while(1)
   {
     pthread_mutex_lock(&mutex_RobotRetrait);
+
 
 
     if(nbPieceFini>=1)
@@ -27,6 +32,9 @@ void* robotRetrait(void* arg)
       // TODO : Creation rapport
 
       nbPieceFini--;
+      
+      sprintf(MessageAfficher,"[Robot de Retrait] : Prêt");
+      affichageConsole(LigneRobotRetrait,MessageAfficher);
      }
      else
      {

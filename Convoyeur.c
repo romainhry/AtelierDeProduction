@@ -119,6 +119,10 @@ struct maillon* retire_convoyeur(struct convoyeur* myConvoyeur,int op, int temps
   }
   else
   {
+    if(myConvoyeur->last==m)
+    {
+      myConvoyeur->last= tmp;
+    }
     tmp->next = m->next;
     if(myConvoyeur->curseur==m)
       myConvoyeur->curseur=tmp;
