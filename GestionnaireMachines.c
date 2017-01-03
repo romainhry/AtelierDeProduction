@@ -8,40 +8,54 @@
 #include <unistd.h>
 #include <pthread.h>
 #include <errno.h>
+#include <signal.h>
 
 #include "GestionnaireMachines.h"
 #include "Affichage.h"
 
 
-#define tempsLimiteTravail 10
+#define tempsLimiteTravail 40
 #define tempsLimiteRetrait 10
+#define probaDefaillant 0.02
+#define ligneMachine machines->numeroMachine+5
 
 void *fonctionnementMachine(void *machine_thread)
 {
   char MessageAfficher[200];
   char * marchePanne;
   Machine * machines=(Machine *) machine_thread;
+  srand(time(NULL));
   while(1)
   {
     pthread_mutex_lock(&machines->mutex);
 		if(machines->nbPiece>=1)
 		{
           sprintf(MessageAfficher,"[Machine %d] : Retire pièce du convoyeur : pièce en transit",machines->numeroMachine);
-          affichageConsole(machines->numeroMachine+5,MessageAfficher);
+          affichageConsole(ligneMachine,MessageAfficher);
 
 		      struct maillon* maillon;
 		      maillon = retire_convoyeur(machines->myConvoyeur,machines->typeOperation,tempsLimiteRetrait);
 		      machines->dispo=0;
 
-          sprintf(MessageAfficher,"[Machine %d] : travaille %d secondes, effectue la tache : %d",machines->numeroMachine,machines->tempsUsinage,machines->typeOperation);
-          affichageConsole(machines->numeroMachine+5,MessageAfficher);
+          sprintf(MessageAfficher,"[Machine %d] : Travaille",machines->numeroMachine);
+          affichageConsole(ligneMachine,MessageAfficher);
 
-          pthread_mutex_unlock(&machines->mutex);
-          sleep(machines->tempsUsinage);
-          pthread_mutex_lock(&machines->mutex);
+          int t = machines->numeroMachine * 1000000;
+          int temps = rand()%((int)(tempsLimiteTravail*1000000+(probaDefaillant*tempsLimiteTravail*1000000))-t)+t; //microsecondes
+          if(temps > tempsLimiteTravail*1000000)
+          {
+            usleep(tempsLimiteTravail);
+            sprintf(MessageAfficher,"[Machine %d] : Arrette de travailler, temps de travail trop élevé",machines->numeroMachine);
+            affichageConsole(ligneMachine,MessageAfficher);
+            kill(getpid(),SIGUSR1);
+            exit(0);
 
-          sprintf(MessageAfficher,"[Machine %d] : a fini de travailler",machines->numeroMachine);
-          affichageConsole(machines->numeroMachine+5,MessageAfficher);
+          }
+          else {
+            usleep(temps);
+          }
+          sprintf(MessageAfficher,"[Machine %d] : A travaillé %d secondes",machines->numeroMachine,temps/1000000);
+          affichageConsole(ligneMachine,MessageAfficher);
 
 		      machines->nbPiece--;
 		      machines->dispo=1;
