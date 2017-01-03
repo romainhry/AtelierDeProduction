@@ -7,6 +7,7 @@
 
 void erreur(const char *msg);
 
+struct convoyeur* addConv;
 typedef struct
 {
   int typePiece;
@@ -32,6 +33,9 @@ struct convoyeur
   struct maillon* curseur;
 	pthread_mutex_t mtx;
 };
+
+//Libère les ressources du convoyeur
+void libereConvoyeur();
 
 //temps d'utilisation des bras d'alimentation/retrait
 int temps(int t);

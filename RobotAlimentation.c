@@ -67,12 +67,12 @@ void* robotAlimentation(void* arg)
 		for (i=0; i<msg.nbrPiece; i++)
 		{
 			nouvellePiece.identifiant=cptPiece++;
-			sprintf(MessageAfficher,"[Robot Alimentation] : pièce en transit...");
+			sprintf(MessageAfficher,"[Robot Alimentation] : pièce [%d] en transit...", nouvellePiece.identifiant);
 	    affichageConsole(LigneRobotAlim,MessageAfficher);
 
 			alimente_convoyeur(nouvellePiece, myConvoyeur, tempsLimiteRobotAlim);
 
-			sprintf(MessageAfficher,"[Robot Alimentation] : pièce déposée...");
+			sprintf(MessageAfficher,"[Robot Alimentation] : pièce [%d] déposée..." , nouvellePiece.identifiant);
 	    affichageConsole(LigneRobotAlim,MessageAfficher);
 
 			v(semid); // signal au superviseur que la piece est posée

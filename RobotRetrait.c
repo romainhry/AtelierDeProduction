@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "RobotRetrait.h"
 #include "Affichage.h"
@@ -25,12 +26,14 @@ void* robotRetrait(void* arg)
       struct maillon* maillon;
       maillon = retire_convoyeur(myConvoyeur,-1,0);
 
-      sprintf(MessageAfficher,"[Robot de Retrait] : Rapport pièce");
+      sprintf(MessageAfficher,"[Robot de Retrait] : Création du rapport de la pièce [%d]", maillon->obj.identifiant);
       affichageConsole(LigneRobotRetrait,MessageAfficher);
 
       sprintf(MessageAfficher,"Pièce [%d] de type : %d Temps d'usinage : %d\n",maillon->obj.identifiant,maillon->obj.typePiece,maillon->obj.tempsUsinage);
       EcrireRapport(MessageAfficher);
-      // TODO : Creation rapport
+
+      //libère ressource
+      free(maillon);
 
 
       nbPieceFini--;

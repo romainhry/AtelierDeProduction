@@ -20,15 +20,20 @@
 
 int pidOp;
 
-/*Suppréssion de la file de message et du semaphore avant quitter l'app*/
+/*Suppréssion de la file de message,du semaphore et libère les ressources allouées avant quitter l'app*/
 void traitantSIGINT(int s)
 {
+  char MessageAfficher[200];
+  libereConvoyeur();
   semctl(semid, 0, IPC_RMID, 0);
   msgctl(msgid,IPC_RMID,NULL);
+
   if(pidOp!=0)
   {
     kill(pidOp,SIGUSR1);
   }
+  sprintf(MessageAfficher,"[Information] : Arrêt du système, libération des ressources");
+  affichageConsole(LigneInformation,MessageAfficher);
   exit(0);
 }
 

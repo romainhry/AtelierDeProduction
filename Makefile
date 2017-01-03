@@ -9,6 +9,10 @@
 Test:
 	make mrproper && make Superviseur && make Operateur && make clean
 
+# création de l'exécutable 'Programme'
+Debug:	Superviseur.o Affichage.o GestionnaireMachines.o Convoyeur.o RobotRetrait.o RobotAlimentation.o Rapport.o
+	gcc Superviseur.o Affichage.o GestionnaireMachines.o Convoyeur.o RobotRetrait.o RobotAlimentation.o Rapport.o -o Superviseur -pthread -g
+
 Superviseur:  Superviseur.o Affichage.o GestionnaireMachines.o Convoyeur.o RobotRetrait.o RobotAlimentation.o Rapport.o
 	gcc Superviseur.o Affichage.o GestionnaireMachines.o Convoyeur.o RobotRetrait.o RobotAlimentation.o Rapport.o -o Superviseur -pthread
 

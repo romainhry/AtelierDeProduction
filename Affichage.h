@@ -11,6 +11,6 @@ pthread_mutex_t mutexAff;
 #define LigneInformation nombreDeMachines+9
 #define LigneRobotRetrait 4
 #define LigneRobotAlim nombreDeMachines+7
-#define ligneMachine machines->numeroMachine+5
+#define ligneMachine nombreDeMachines+5-machines->numeroMachine
 
 #endif

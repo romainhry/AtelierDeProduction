@@ -45,16 +45,19 @@ void *fonctionnementMachine(void *machine_thread)
         sprintf(MessageAfficher,"\nPièce [%d] : Pièce déstinée à machine en panne : defaillance\n",maillon->obj.identifiant);
         EcrireRapport(MessageAfficher);
 
+        //libère ressource
+        free(maillon);
+
         kill(getpid(),SIGUSR1);
         pthread_exit(0);
       }
 
-      sprintf(MessageAfficher,"[Machine %d] : Retire pièce du convoyeur : pièce en transit",machines->numeroMachine);
+      sprintf(MessageAfficher,"[Machine %d] : Retire pièce du convoyeur : pièce [%d] en transit",machines->numeroMachine, maillon->obj.identifiant);
       affichageConsole(ligneMachine,MessageAfficher);
 
       machines->dispo=0;
 
-      sprintf(MessageAfficher,"[Machine %d] : Travaille",machines->numeroMachine);
+      sprintf(MessageAfficher,"[Machine %d] : Travaille sur la pièce [%d]",machines->numeroMachine, maillon->obj.identifiant);
       affichageConsole(ligneMachine,MessageAfficher);
 
       //Génere panne machine au hasard
@@ -74,7 +77,6 @@ void *fonctionnementMachine(void *machine_thread)
         sprintf(MessageAfficher,"[Machine %d] : Arrette de travailler, temps de travail trop élevé\n",machines->numeroMachine);
         EcrireRapport(MessageAfficher);
 
-
         sprintf(MessageAfficher,"[Machine %d] : En panne",machines->numeroMachine);
         affichageConsole(ligneMachine,MessageAfficher);
 
@@ -84,6 +86,8 @@ void *fonctionnementMachine(void *machine_thread)
         machines->etatFonctionnement=PANNE;
         maillon->obj.fini=-1;
         maillon->obj.tempsUsinage=tempsLimiteTravail;
+
+
       }
       else
       {
@@ -106,12 +110,15 @@ void *fonctionnementMachine(void *machine_thread)
         v(semid); // signal au superviseur que la piece est posée
 
         sprintf(MessageAfficher,"[Machine %d] : Prête",machines->numeroMachine);
-        affichageConsole(machines->numeroMachine+5,MessageAfficher);
+        affichageConsole(ligneMachine,MessageAfficher);
 
       }
 
       machines->nbPiece--;
       machines->dispo=1;
+
+      //libère ressource
+      free(maillon);
      }
 		 else
 		 {

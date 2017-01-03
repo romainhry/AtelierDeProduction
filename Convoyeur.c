@@ -13,6 +13,7 @@
 void init_convoyeur(struct convoyeur* myConvoyeur)
 {
   char MessageAfficher[200];
+  addConv=myConvoyeur;
 	myConvoyeur->first = NULL;
 	myConvoyeur->last = NULL;
   myConvoyeur->curseur = NULL;
@@ -86,6 +87,20 @@ int temps(int t)
   }
 }
 
+void libereConvoyeur() {
+ if(addConv->first !=NULL) {
+   struct maillon * m = addConv->first;
+   struct maillon * tmp;
+   while(m!=addConv->last)
+   {
+     tmp = m->next;
+     free(m);
+     m = tmp;
+   }
+   free(m);
+ }
+}
+
 
 //lecture et suppression d'un maillon en début de myConvoyeur
 struct maillon* retire_convoyeur(struct convoyeur* myConvoyeur,int op, int tempsLimite)
@@ -140,11 +155,12 @@ struct maillon* retire_convoyeur(struct convoyeur* myConvoyeur,int op, int temps
       sprintf(MessageAfficher,"\nBras de retrait de la machine %d bloqué trop longtemps\n",op);
       EcrireRapport(MessageAfficher);
 
+      free(m);
+      
       kill(getpid(),SIGUSR1);
       pthread_exit(0);
     }
   }
-
 
 	if(pthread_mutex_unlock(&myConvoyeur->mtx) == -1)
 	{
