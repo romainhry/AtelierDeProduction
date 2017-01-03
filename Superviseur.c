@@ -14,6 +14,7 @@
 #include "Convoyeur.h"
 #include "GestionnaireMachines.h"
 #include "RobotAlimentation.h"
+#include "RobotRetrait.h"
 #include "Operateur.h"
 
 
@@ -115,6 +116,8 @@ int main(int argc,char* argv[])
     sprintf(MessageAfficher,"[Erreur] : Initialisation de la sémaphore de réception principale");
     affichageConsole(LigneErreur,MessageAfficher);
   }
+
+
   pthread_t t_robotAlimentation;
   if(pthread_create(&t_robotAlimentation, NULL, &robotAlimentation, &myConvoyeur) != 0)
   {
@@ -122,24 +125,65 @@ int main(int argc,char* argv[])
     affichageConsole(LigneErreur,MessageAfficher);
   }
 
-  sprintf(MessageAfficher,"[Robot Alimentation] : création du thread");
-  affichageConsole(LigneRobotAlim,MessageAfficher);
+  nbPieceFini=0;
+  pthread_t t_robotRetrait;
+  //Création d'un moniteur pour le robot de retrait
+  if(pthread_mutex_init(&mutex_RobotRetrait, NULL) == -1)
+  {
+    sprintf(MessageAfficher,"[Erreur] : Initialisation mutex de synchro de machine");
+    affichageConsole(LigneErreur,MessageAfficher);
+    exit(1);
+  }
+  if(pthread_cond_init(&attendre_RobotRetrait, NULL) == -1)
+  {
+    sprintf(MessageAfficher,"[Erreur] : Initialisation mutex d'attente de machine");
+    affichageConsole(LigneErreur,MessageAfficher);
+    exit(1);
+  }
+
+  if(pthread_create(&t_robotRetrait, NULL, &robotRetrait, &myConvoyeur) != 0)
+  {
+    sprintf(MessageAfficher,"[Erreur] : Création thread robotRetrait");
+    affichageConsole(LigneErreur,MessageAfficher);
+  }
 
   int arret = 0;
 
-  int typePieceCourrente;
+  piece pieceCourrente;
+
 
   while(!arret)
   {
     p(semid);
 
-    typePieceCourrente = typePiece_convoyeur(&myConvoyeur); //récupère une pièce du convoyeur
+    pieceCourrente = getPiece_convoyeur(&myConvoyeur); //récupère une pièce du convoyeur
 
-    pthread_mutex_lock(&machines[typePieceCourrente].mutex);
+    sprintf(MessageAfficher,"[Erreur] : maPiece : %d\n",pieceCourrente.fini);
+    affichageConsole(LigneErreur,MessageAfficher);
 
-    machines[typePieceCourrente].nbPiece++;
-    pthread_cond_signal(&machines[typePieceCourrente].attendre); //Dit à la machine qu'il y au moins une pièce pour elle
-    pthread_mutex_unlock(&machines[typePieceCourrente].mutex);
+
+    if(pieceCourrente.fini==0)
+    {
+      int typePieceCourrente=pieceCourrente.typePiece;
+      pthread_mutex_lock(&machines[typePieceCourrente].mutex);
+
+      if(machines[typePieceCourrente].etatFonctionnement == 0)
+      {
+        sprintf(MessageAfficher,"[Information] : Pièce déstinée à machine en panne : defaillance");
+        affichageConsole(LigneInformation,MessageAfficher);
+        kill(getpid(),SIGUSR1);
+      }
+
+      machines[typePieceCourrente].nbPiece++;
+      pthread_cond_signal(&machines[typePieceCourrente].attendre); //Dit à la machine qu'il y au moins une pièce pour elle
+      pthread_mutex_unlock(&machines[typePieceCourrente].mutex);
+    }
+    else {
+      pthread_mutex_lock(&mutex_RobotRetrait);
+      nbPieceFini++;
+      pthread_cond_signal(&attendre_RobotRetrait); //Dit à la machine qu'il y au moins une pièce pour elle
+      pthread_mutex_unlock(&mutex_RobotRetrait);
+    }
 
   }
   return 0;

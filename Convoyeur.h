@@ -10,6 +10,8 @@ void erreur(const char *msg);
 typedef struct
 {
   int typePiece;
+  char rapport[200];
+  int fini;
 } piece;
 
 
@@ -42,5 +44,5 @@ void alimente_convoyeur(piece pPiece, struct convoyeur* myConvoyeur, int tempsLi
 struct maillon* retire_convoyeur(struct convoyeur* myConvoyeur,int op, int tempsLimite);
 
 //lecture d'une piece en début de myConvoyeur
-int typePiece_convoyeur(struct convoyeur* myConvoyeur);
+piece getPiece_convoyeur(struct convoyeur* myConvoyeur);
 #endif

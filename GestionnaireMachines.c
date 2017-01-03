@@ -12,63 +12,99 @@
 
 #include "GestionnaireMachines.h"
 #include "Affichage.h"
+#include "RobotAlimentation.h"
 
 
 #define tempsLimiteTravail 40
 #define tempsLimiteRetrait 10
-#define probaDefaillant 0.02
+#define probaMachineDefaillant 0.5
 #define ligneMachine machines->numeroMachine+5
 
 void *fonctionnementMachine(void *machine_thread)
 {
   char MessageAfficher[200];
   char * marchePanne;
+  piece myPiece;
   Machine * machines=(Machine *) machine_thread;
   srand(time(NULL));
   while(1)
   {
     pthread_mutex_lock(&machines->mutex);
+
+
 		if(machines->nbPiece>=1)
 		{
-          sprintf(MessageAfficher,"[Machine %d] : Retire pièce du convoyeur : pièce en transit",machines->numeroMachine);
-          affichageConsole(ligneMachine,MessageAfficher);
+      if(machines->etatFonctionnement==PANNE)
+      {
+        sprintf(MessageAfficher,"[Information] : Pièce déstinée à machine en panne : defaillance");
+        affichageConsole(LigneInformation,MessageAfficher);
+        kill(getpid(),SIGUSR1);
+        pthread_exit(0);
+      }
 
-		      struct maillon* maillon;
-		      maillon = retire_convoyeur(machines->myConvoyeur,machines->typeOperation,tempsLimiteRetrait);
-		      machines->dispo=0;
+      sprintf(MessageAfficher,"[Machine %d] : Retire pièce du convoyeur : pièce en transit",machines->numeroMachine);
+      affichageConsole(ligneMachine,MessageAfficher);
 
-          sprintf(MessageAfficher,"[Machine %d] : Travaille",machines->numeroMachine);
-          affichageConsole(ligneMachine,MessageAfficher);
+      struct maillon* maillon;
+      maillon = retire_convoyeur(machines->myConvoyeur,machines->typeOperation,tempsLimiteRetrait);
+      machines->dispo=0;
 
-          int t = machines->numeroMachine * 1000000;
-          int temps = rand()%((int)(tempsLimiteTravail*1000000+(probaDefaillant*tempsLimiteTravail*1000000))-t)+t; //microsecondes
-          if(temps > tempsLimiteTravail*1000000)
-          {
-            usleep(tempsLimiteTravail);
-            sprintf(MessageAfficher,"[Machine %d] : Arrette de travailler, temps de travail trop élevé",machines->numeroMachine);
-            affichageConsole(ligneMachine,MessageAfficher);
-            kill(getpid(),SIGUSR1);
-            exit(0);
+      sprintf(MessageAfficher,"[Machine %d] : Travaille",machines->numeroMachine);
+      affichageConsole(ligneMachine,MessageAfficher);
 
-          }
-          else {
-            usleep(temps);
-          }
-          sprintf(MessageAfficher,"[Machine %d] : A travaillé %d secondes",machines->numeroMachine,temps/1000000);
-          affichageConsole(ligneMachine,MessageAfficher);
+      //Génere panne machine au hasard
+      int t = machines->numeroMachine * 1000000;
+      int temps = rand()%((int)(tempsLimiteTravail*1000000+(probaMachineDefaillant*tempsLimiteTravail*1000000))-t)+t;
 
-		      machines->nbPiece--;
-		      machines->dispo=1;
+      //Verif panne machine
+      if(temps > tempsLimiteTravail*1000000)
+      {
+        pthread_mutex_unlock(&machines->mutex);
+        sleep(tempsLimiteTravail);
+        pthread_mutex_lock(&machines->mutex);
+
+        sprintf(MessageAfficher,"[Machine %d] : Arrette de travailler, temps de travail trop élevé",machines->numeroMachine);
+        affichageConsole(ligneMachine,MessageAfficher);
+
+        sprintf(MessageAfficher,"[Machine %d] : En panne",machines->numeroMachine);
+        affichageConsole(ligneMachine,MessageAfficher);
+
+        machines->etatFonctionnement=PANNE;
+        maillon->obj.fini=-1;
+      }
+      else {
+        pthread_mutex_unlock(&machines->mutex);
+        usleep(temps);
+        pthread_mutex_lock(&machines->mutex);
+        myPiece = maillon->obj;
+        myPiece.fini=1;
+        sprintf(MessageAfficher,"[Machine %d] : A travaillé %d secondes",machines->numeroMachine,temps/1000000);
+        affichageConsole(ligneMachine,MessageAfficher);
+
+        sprintf(MessageAfficher,"[Machine %d] : Pièce en transit vers convoyeur...",machines->numeroMachine);
+  	    affichageConsole(ligneMachine,MessageAfficher);
+
+  			alimente_convoyeur(myPiece, machines->myConvoyeur, 0);
+
+  			sprintf(MessageAfficher,"[Machine %d] : Pièce déposée...",machines->numeroMachine);
+  	    affichageConsole(ligneMachine,MessageAfficher);
+
+        v(semid); // signal au superviseur que la piece est posée
+
+        sprintf(MessageAfficher,"[Machine %d] : Prête",machines->numeroMachine);
+        affichageConsole(machines->numeroMachine+5,MessageAfficher);
+      }
+
+      machines->nbPiece--;
+      machines->dispo=1;
      }
 		 else
 		 {
 		      pthread_cond_wait(&machines->attendre,&machines->mutex);
 		 }
-     sprintf(MessageAfficher,"[Machine %d] : Prête",machines->numeroMachine);
-     affichageConsole(machines->numeroMachine+5,MessageAfficher);
+
      pthread_mutex_unlock(&machines->mutex);
   }
-
   pthread_exit(NULL);
 }
 
@@ -103,6 +139,8 @@ void creationMachines(int nbMachines, pthread_t * threads, Machine * machines , 
     machines[t].dispo=1;
     machines[t].nbPiece=0;
 
+
+    //Création d'un moniteur par machine
     if(pthread_mutex_init(&machines[t].mutex, NULL) == -1)
 	  {
       sprintf(MessageAfficher,"[Erreur] : Initialisation mutex de synchro de machine");

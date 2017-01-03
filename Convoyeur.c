@@ -28,11 +28,13 @@ void init_convoyeur(struct convoyeur* myConvoyeur)
 void alimente_convoyeur(piece pPiece, struct convoyeur* myConvoyeur, int tempsLimite)
 {
   char MessageAfficher[200];
+
 	if(pthread_mutex_lock(&myConvoyeur->mtx) == -1)
 	{
     sprintf(MessageAfficher,"[Erreur] : Verrouillage du mutex");
     affichageConsole(LigneErreur,MessageAfficher);
   }
+
 	struct maillon* m = malloc(sizeof(struct maillon));
 	m->next = NULL;
 	m->obj = pPiece;
@@ -45,12 +47,18 @@ void alimente_convoyeur(piece pPiece, struct convoyeur* myConvoyeur, int tempsLi
 		(myConvoyeur->last)->next = m;
 	}
 	myConvoyeur->last = m;
-  if(temps(tempsLimite)==0)
+
+  if(tempsLimite!=0) // pas de defaillance si tempsLimite=0;
   {
-    sprintf(MessageAfficher,"[Information] : Bras d'alimentation bloqué trop longtemps");
-    affichageConsole(LigneInformation,MessageAfficher);
-    kill(getpid(),SIGUSR1);
+    //Génere defaillance bras d'alimentation de la machine au hasard
+    if(temps(tempsLimite)==0)
+    {
+      sprintf(MessageAfficher,"[Information] : Bras d'alimentation bloqué trop longtemps");
+      affichageConsole(LigneInformation,MessageAfficher);
+      kill(getpid(),SIGUSR1);
+    }
   }
+
 	if(pthread_mutex_unlock(&myConvoyeur->mtx) == -1)
 	{
     sprintf(MessageAfficher,"[Erreur] : Déverrouillage du mutex");
@@ -88,13 +96,22 @@ struct maillon* retire_convoyeur(struct convoyeur* myConvoyeur,int op, int temps
 	struct maillon* m;
   struct maillon* tmp= NULL;
 	m = myConvoyeur->first;
-
   //Cherche la pièce en question
-	while(m->obj.typePiece != op)
-	{
-    tmp = m;
-    m = m->next;
-	}
+  if(tempsLimite!=0) //cherche en fonction de son operation
+  {
+  	while(m->obj.typePiece != op)
+  	{
+      tmp = m;
+      m = m->next;
+  	}
+  }
+  else{     //cherche une pièce fini
+    while(m->obj.fini != 1)
+  	{
+      tmp = m;
+      m = m->next;
+  	}
+  }
 
   //Reforme la chaine
   if(myConvoyeur->first==m) {
@@ -107,12 +124,18 @@ struct maillon* retire_convoyeur(struct convoyeur* myConvoyeur,int op, int temps
       myConvoyeur->curseur=tmp;
   }
 
-  if(temps(tempsLimite)==0)
+  if(tempsLimite!=0) //Génere defaillance bras de retrait de la machine au hasard
   {
-    sprintf(MessageAfficher,"[Information] : Bras de retrait de la machine %d bloqué trop longtemps",op);
-    affichageConsole(LigneInformation,MessageAfficher);
-    kill(getpid(),SIGUSR1);
+    if(temps(tempsLimite)==0)
+    {
+      sprintf(MessageAfficher,"[Information] : Bras de retrait de la machine %d bloqué trop longtemps",op);
+      affichageConsole(LigneInformation,MessageAfficher);
+      kill(getpid(),SIGUSR1);
+      pthread_exit(0);
+    }
   }
+
+
 	if(pthread_mutex_unlock(&myConvoyeur->mtx) == -1)
 	{
     char MessageAfficher[200];
@@ -124,7 +147,7 @@ struct maillon* retire_convoyeur(struct convoyeur* myConvoyeur,int op, int temps
 }
 
 //lecture d'un maillon en début de myConvoyeur
-int typePiece_convoyeur(struct convoyeur* myConvoyeur)
+piece getPiece_convoyeur(struct convoyeur* myConvoyeur)
 {
   char MessageAfficher[200];
 	if(pthread_mutex_lock(&myConvoyeur->mtx) == -1)
@@ -132,12 +155,12 @@ int typePiece_convoyeur(struct convoyeur* myConvoyeur)
     sprintf(MessageAfficher,"[Erreur] : Verrouillage du mutex");
     affichageConsole(LigneErreur,MessageAfficher);
 	}
-	int res;
+	piece res;
   if((myConvoyeur->curseur)->next!=NULL)
   {
     myConvoyeur->curseur = (myConvoyeur->curseur)->next;
   }
-	res = (myConvoyeur->curseur)->obj.typePiece;
+	res = (myConvoyeur->curseur)->obj;
 	if(pthread_mutex_unlock(&myConvoyeur->mtx) == -1)
 	{
     sprintf(MessageAfficher,"[Erreur] : Déverrouillage du mutex");

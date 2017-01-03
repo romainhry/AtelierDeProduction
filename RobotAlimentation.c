@@ -46,6 +46,8 @@ void* robotAlimentation(void* arg)
 
   struct convoyeur* myConvoyeur = arg;
 
+	sprintf(MessageAfficher,"[Robot Alimentation] : Prêt");
+	affichageConsole(LigneRobotAlim,MessageAfficher);
 
 
   piece nouvellePiece;
@@ -59,14 +61,20 @@ void* robotAlimentation(void* arg)
 			affichageConsole(LigneErreur,MessageAfficher);
 		}
 		nouvellePiece.typePiece=msg.operation;
+		nouvellePiece.fini=0;
 		for (i=0; i<msg.nbrPiece; i++)
 		{
-			sprintf(MessageAfficher,"[Robot Alimentation] : piece en transit...");
+			sprintf(MessageAfficher,"[Robot Alimentation] : pièce en transit...");
 	    affichageConsole(LigneRobotAlim,MessageAfficher);
+
 			alimente_convoyeur(nouvellePiece, myConvoyeur, tempsLimiteRobotAlim);
-			v(semid);
-			sprintf(MessageAfficher,"[Robot Alimentation] : piece en déposée...");
+
+			sprintf(MessageAfficher,"[Robot Alimentation] : pièce déposée...");
 	    affichageConsole(LigneRobotAlim,MessageAfficher);
+
+
+			v(semid); // signal au superviseur que la piece est posée
+
 		}
 		sprintf(MessageAfficher,"[Robot Alimentation] : %d pièces mises sur le convoyeur, opération : %d\n",msg.nbrPiece, nouvellePiece.typePiece);
 		affichageConsole(LigneRobotAlim,MessageAfficher);
