@@ -8,8 +8,11 @@ void NouveauRapport()
     FILE* fichierIndex = NULL;
 
     int caractereActuel = 0;
-    int caractereAvant=0;
-    int tmp=0;
+    int cpt=0;
+    char chaine[10000];
+    int unite;
+    int dixaine;
+    int add;
 
     fichierIndex = fopen("Rapport/Index_Rapport.txt", "a+");
 
@@ -17,21 +20,37 @@ void NouveauRapport()
     {
         do
         {
-      	caractereAvant=tmp;	//caractereAvant = caractère qui a le numéro du dernier Rapport
-      	tmp = caractereActuel;
-        caractereActuel = fgetc(fichierIndex); // On lit le caractère
+          caractereActuel = fgetc(fichierIndex); // On lit le caractère
+          chaine[cpt]=caractereActuel;
+          cpt++;
         } while (caractereActuel != EOF); // On continue tant que fgetc n'a pas retourné EOF (fin de fichier)
 
-	  caractereAvant=caractereAvant-47;	//On passe de l'ASCII -> int  en ajoutant +1
+      if (cpt < 3)
+      {
+        add=1;
+      }
+      else
+      {
+        dixaine=(int)chaine[cpt-4];
+        dixaine=dixaine-'0';
+        if(dixaine > 9 || dixaine < 1)
+        {dixaine=0;}
 
-	  fprintf(fichierIndex, "Rapport %d\n", caractereAvant);	//On rajoute le rapport dans l'index
+        unite=(int)chaine[cpt-3];
+        unite=unite-'0';
+
+        add=unite+(10*dixaine)+1;
+      }
+
+	  fprintf(fichierIndex, "Rapport %d\n", add);	//On rajoute le rapport dans l'index
     fclose(fichierIndex);
-    }
 
-    sprintf(nomRapport, "Rapport/Rapport%d.txt", caractereAvant); //On défini le nom du nouveau rapport
+
+    sprintf(nomRapport, "Rapport/Rapport%d.txt", add); //On défini le nom du nouveau rapport
     fichierRapport = fopen(nomRapport, "a+");  //On créé le nouveau Rapport
-    fprintf(fichierRapport, "Rapport %d\n\n", caractereAvant);	//On ajoute le titre du rapport
+    fprintf(fichierRapport, "Rapport %d\n\n", add);	//On ajoute le titre du rapport
     fclose(fichierRapport);
+    }
 
 }
 
