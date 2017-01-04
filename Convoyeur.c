@@ -25,6 +25,13 @@ void init_convoyeur(struct convoyeur* myConvoyeur)
     sprintf(MessageAfficher,"[Erreur] : Initialisation du mutex");
     affichageConsole(LigneErreur,MessageAfficher);
 	}
+
+  if(pthread_cond_init(&myConvoyeur->condition, NULL) == -1)
+  {
+    sprintf(MessageAfficher,"[Erreur] : Initialisation mutex de condition d'acces au convoyeur'");
+    affichageConsole(LigneErreur,MessageAfficher);
+    exit(1);
+  }
 }
 
 
@@ -38,15 +45,29 @@ void alimente_convoyeur(piece pPiece, struct convoyeur* myConvoyeur, int tempsLi
     sprintf(MessageAfficher,"[Erreur] : Verrouillage du mutex");
     affichageConsole(LigneErreur,MessageAfficher);
   }
-  myConvoyeur->nbPiece++;
-  if(myConvoyeur->nbPiece>capaciteConvoyeur) // pas de defaillance si tempsLimite=0;
+
+  if(pPiece.fini==1)
   {
-    sprintf(MessageAfficher,"[Information] : Trop de pièce à gerer : Défaillance");
-    affichageConsole(LigneInformation,MessageAfficher);
-    sprintf(MessageAfficher,"\nTrop de pièce à gerer : Défaillance\n");
-    EcrireRapport(MessageAfficher);
-    kill(getpid(),SIGUSR1);
+    if(myConvoyeur->nbPiece==capaciteConvoyeur) // pas de defaillance si tempsLimite=0;
+    {
+      sprintf(MessageAfficher,"[Information] : Convoyeur surchargé : attente avant alimentation");
+      affichageConsole(LigneInformation,MessageAfficher);
+      sprintf(MessageAfficher,"[Information] : Reprise d'alimentation");
+      affichageConsole(LigneInformation,MessageAfficher);
+      pthread_cond_wait(&myConvoyeur->condition,&myConvoyeur->mtx);
+    }
   }
+  else {
+    if(myConvoyeur->nbPiece==capaciteConvoyeur-1) // pas de defaillance si tempsLimite=0;
+    {
+      sprintf(MessageAfficher,"[Information] : Convoyeur surchargé : attente avant alimentation");
+      affichageConsole(LigneInformation,MessageAfficher);
+      pthread_cond_wait(&myConvoyeur->condition,&myConvoyeur->mtx);
+    }
+  }
+
+
+  myConvoyeur->nbPiece++;
 
 	struct maillon* m = malloc(sizeof(struct maillon));
 	m->next = NULL;
@@ -126,6 +147,7 @@ struct maillon* retire_convoyeur(struct convoyeur* myConvoyeur,int op, int temps
   struct maillon* tmp= NULL;
 	m = myConvoyeur->first;
   myConvoyeur->nbPiece--;
+
   //Cherche la pièce en question
   if(tempsLimite!=0) //cherche en fonction de son operation
   {
@@ -173,6 +195,8 @@ struct maillon* retire_convoyeur(struct convoyeur* myConvoyeur,int op, int temps
       pthread_exit(0);
     }
   }
+
+  pthread_cond_signal(&myConvoyeur->condition);
 
 	if(pthread_mutex_unlock(&myConvoyeur->mtx) == -1)
 	{

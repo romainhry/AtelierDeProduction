@@ -52,6 +52,6 @@ void affichageConsole (int depLigne,char * Message)
   fflush(stdout);
   printf("\033[200D");      //Retour curseur à gauche
   fflush(stdout);
-  sleep(1);
   pthread_mutex_unlock(&mutexAff);
+  sleep(1);
 }

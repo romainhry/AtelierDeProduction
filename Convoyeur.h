@@ -34,6 +34,7 @@ struct convoyeur
   struct maillon* curseur;
   int nbPiece;
 	pthread_mutex_t mtx;
+  pthread_cond_t condition;
 };
 
 //Libère les ressources du convoyeur
