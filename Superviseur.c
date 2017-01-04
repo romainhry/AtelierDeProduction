@@ -151,7 +151,7 @@ int main(int argc,char* argv[])
     sprintf(MessageAfficher,"[Erreur] : Création thread robotRetrait");
     affichageConsole(LigneErreur,MessageAfficher);
   }
-
+  
   //Création d'un nouveau Rapport
   NouveauRapport();
 
