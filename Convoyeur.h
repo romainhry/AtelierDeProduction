@@ -2,16 +2,17 @@
 #define CONVOYEUR_H_
 
 #define probaDefaillant 0.02
+#define capaciteConvoyeur 20
 
 #include <pthread.h>
 
 void erreur(const char *msg);
 
 struct convoyeur* addConv;
+
 typedef struct
 {
   int typePiece;
-  char rapport[200];
   int fini;
   int identifiant;
   int tempsUsinage;
@@ -25,12 +26,13 @@ struct maillon
   piece obj;
 };
 
-//convoyeur du convoyeur
+//liste chainée du convoyeur
 struct convoyeur
 {
 	struct maillon* first;
 	struct maillon* last;
   struct maillon* curseur;
+  int nbPiece;
 	pthread_mutex_t mtx;
 };
 

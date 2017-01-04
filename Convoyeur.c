@@ -17,6 +17,8 @@ void init_convoyeur(struct convoyeur* myConvoyeur)
 	myConvoyeur->first = NULL;
 	myConvoyeur->last = NULL;
   myConvoyeur->curseur = NULL;
+  myConvoyeur->nbPiece =0;
+
   srand(time(NULL));
 	if(pthread_mutex_init(&myConvoyeur->mtx, NULL) == -1)
 	{
@@ -35,6 +37,15 @@ void alimente_convoyeur(piece pPiece, struct convoyeur* myConvoyeur, int tempsLi
 	{
     sprintf(MessageAfficher,"[Erreur] : Verrouillage du mutex");
     affichageConsole(LigneErreur,MessageAfficher);
+  }
+  myConvoyeur->nbPiece++;
+  if(myConvoyeur->nbPiece>capaciteConvoyeur) // pas de defaillance si tempsLimite=0;
+  {
+    sprintf(MessageAfficher,"[Information] : Trop de pièce à gerer : Défaillance");
+    affichageConsole(LigneInformation,MessageAfficher);
+    sprintf(MessageAfficher,"\nTrop de pièce à gerer : Défaillance\n");
+    EcrireRapport(MessageAfficher);
+    kill(getpid(),SIGUSR1);
   }
 
 	struct maillon* m = malloc(sizeof(struct maillon));
@@ -114,6 +125,7 @@ struct maillon* retire_convoyeur(struct convoyeur* myConvoyeur,int op, int temps
 	struct maillon* m;
   struct maillon* tmp= NULL;
 	m = myConvoyeur->first;
+  myConvoyeur->nbPiece--;
   //Cherche la pièce en question
   if(tempsLimite!=0) //cherche en fonction de son operation
   {
@@ -156,7 +168,7 @@ struct maillon* retire_convoyeur(struct convoyeur* myConvoyeur,int op, int temps
       EcrireRapport(MessageAfficher);
 
       free(m);
-      
+
       kill(getpid(),SIGUSR1);
       pthread_exit(0);
     }
@@ -181,12 +193,14 @@ piece getPiece_convoyeur(struct convoyeur* myConvoyeur)
     sprintf(MessageAfficher,"[Erreur] : Verrouillage du mutex");
     affichageConsole(LigneErreur,MessageAfficher);
 	}
+
 	piece res;
   if((myConvoyeur->curseur)->next!=NULL)
   {
     myConvoyeur->curseur = (myConvoyeur->curseur)->next;
   }
 	res = (myConvoyeur->curseur)->obj;
+
 	if(pthread_mutex_unlock(&myConvoyeur->mtx) == -1)
 	{
     sprintf(MessageAfficher,"[Erreur] : Déverrouillage du mutex");
