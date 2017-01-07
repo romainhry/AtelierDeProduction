@@ -6,4 +6,6 @@ char  nomRapport[40];
 void NouveauRapport(void);
 void EcrireRapport(char * MessageRapport);
 
+pthread_mutex_t mutexRapport;
+
 #endif

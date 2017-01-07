@@ -62,6 +62,8 @@ void alimente_convoyeur(piece pPiece, struct convoyeur* myConvoyeur, int tempsLi
     {
       sprintf(MessageAfficher,"[Information] : Convoyeur surchargé : attente avant alimentation");
       affichageConsole(LigneInformation,MessageAfficher);
+      sprintf(MessageAfficher,"[Information] : Reprise d'alimentation");
+      affichageConsole(LigneInformation,MessageAfficher);
       pthread_cond_wait(&myConvoyeur->condition,&myConvoyeur->mtx);
     }
   }
@@ -72,10 +74,9 @@ void alimente_convoyeur(piece pPiece, struct convoyeur* myConvoyeur, int tempsLi
 	struct maillon* m = malloc(sizeof(struct maillon));
 	m->next = NULL;
 	m->obj = pPiece;
-	if(myConvoyeur->first == NULL)
+  if(myConvoyeur->first == NULL)
 	{
 		myConvoyeur->first = m;
-    myConvoyeur->curseur = m;
 
 	} else {
 		(myConvoyeur->last)->next = m;
@@ -146,12 +147,13 @@ struct maillon* retire_convoyeur(struct convoyeur* myConvoyeur,int op, int temps
 	struct maillon* m;
   struct maillon* tmp= NULL;
 	m = myConvoyeur->first;
+
   myConvoyeur->nbPiece--;
 
   //Cherche la pièce en question
   if(tempsLimite!=0) //cherche en fonction de son operation
   {
-  	while(m->obj.typePiece != op)
+  	while(m->obj.typePiece != op && m->obj.fini != 1)
   	{
       tmp = m;
       m = m->next;
@@ -166,19 +168,32 @@ struct maillon* retire_convoyeur(struct convoyeur* myConvoyeur,int op, int temps
   }
 
   //Reforme la chaine
-  if(myConvoyeur->first==m) {
+  if(myConvoyeur->first==m && myConvoyeur->last==m) {
+    myConvoyeur->last= NULL;
+    myConvoyeur->first= NULL;
+    myConvoyeur->curseur=NULL;
+  }
+  else if (myConvoyeur->first==m)
+  {
+    if(myConvoyeur->curseur==m)
+    {
+      myConvoyeur->curseur=NULL;
+    }
     myConvoyeur->first=m->next;
+  }
+  else if(myConvoyeur->last==m)
+  {
+    myConvoyeur->last= tmp;
+    if(myConvoyeur->curseur==m)
+      myConvoyeur->curseur=tmp;
   }
   else
   {
-    if(myConvoyeur->last==m)
-    {
-      myConvoyeur->last= tmp;
-    }
     tmp->next = m->next;
     if(myConvoyeur->curseur==m)
       myConvoyeur->curseur=tmp;
   }
+
 
   if(tempsLimite!=0) //Génere defaillance bras de retrait de la machine au hasard
   {
@@ -218,12 +233,18 @@ piece getPiece_convoyeur(struct convoyeur* myConvoyeur)
     affichageConsole(LigneErreur,MessageAfficher);
 	}
 
-	piece res;
-  if((myConvoyeur->curseur)->next!=NULL)
+  piece res;
+  if(myConvoyeur->curseur==NULL)
   {
-    myConvoyeur->curseur = (myConvoyeur->curseur)->next;
+    myConvoyeur->curseur=myConvoyeur->first;
   }
-	res = (myConvoyeur->curseur)->obj;
+  else{
+    if((myConvoyeur->curseur)->next!=NULL)
+    {
+      myConvoyeur->curseur = (myConvoyeur->curseur)->next;
+    }
+  }
+  res = (myConvoyeur->curseur)->obj;
 
 	if(pthread_mutex_unlock(&myConvoyeur->mtx) == -1)
 	{

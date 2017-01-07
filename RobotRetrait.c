@@ -33,7 +33,7 @@ void* robotRetrait(void* arg)
       EcrireRapport(MessageAfficher);
 
       //libère ressource
-      free(maillon);
+      //free(maillon);
 
 
       nbPieceFini--;

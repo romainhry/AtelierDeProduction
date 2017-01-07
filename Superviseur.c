@@ -32,8 +32,7 @@ void traitantSIGINT(int s)
   {
     kill(pidOp,SIGUSR1);
   }
-  sprintf(MessageAfficher,"[Information] : Arrêt du système, libération des ressources");
-  affichageConsole(LigneInformation,MessageAfficher);
+
   exit(0);
 }
 
@@ -151,7 +150,7 @@ int main(int argc,char* argv[])
     sprintf(MessageAfficher,"[Erreur] : Création thread robotRetrait");
     affichageConsole(LigneErreur,MessageAfficher);
   }
-  
+
   //Création d'un nouveau Rapport
   NouveauRapport();
 

@@ -15,10 +15,6 @@
 #include "RobotAlimentation.h"
 #include "Rapport.h"
 
-#define tempsLimiteTravail 40
-#define tempsLimiteRetrait 10
-#define probaMachineDefaillant 0.02
-
 
 void *fonctionnementMachine(void *machine_thread)
 {
@@ -33,27 +29,26 @@ void *fonctionnementMachine(void *machine_thread)
 
 		if(machines->nbPiece>=1)
 		{
-
-      struct maillon* maillon;
-      maillon = retire_convoyeur(machines->myConvoyeur,machines->typeOperation,tempsLimiteRetrait);
-
       if(machines->etatFonctionnement==PANNE)
       {
         sprintf(MessageAfficher,"[Information] : Pièce déstinée à machine en panne : defaillance");
         affichageConsole(LigneInformation,MessageAfficher);
 
-        sprintf(MessageAfficher,"\nPièce [%d] : Pièce déstinée à machine en panne : defaillance\n",maillon->obj.identifiant);
+        sprintf(MessageAfficher,"Pièce déstinée à [Machine %d] en panne : defaillance\n",machines->numeroMachine);
         EcrireRapport(MessageAfficher);
-
-        //libère ressource
-        free(maillon);
 
         kill(getpid(),SIGUSR1);
         pthread_exit(0);
       }
 
-      sprintf(MessageAfficher,"[Machine %d] : Retire pièce du convoyeur : pièce [%d] en transit",machines->numeroMachine, maillon->obj.identifiant);
+      struct maillon* maillon;
+
+      sprintf(MessageAfficher,"[Machine %d] : Retire pièce du convoyeur : pièce en transit",machines->numeroMachine);
       affichageConsole(ligneMachine,MessageAfficher);
+
+      pthread_mutex_unlock(&machines->mutex);
+      maillon = retire_convoyeur(machines->myConvoyeur,machines->typeOperation,tempsLimiteRetrait);
+      pthread_mutex_lock(&machines->mutex);
 
       machines->dispo=0;
 
@@ -99,12 +94,14 @@ void *fonctionnementMachine(void *machine_thread)
         sprintf(MessageAfficher,"[Machine %d] : A travaillé %d secondes",machines->numeroMachine,temps/1000000);
         affichageConsole(ligneMachine,MessageAfficher);
 
-        sprintf(MessageAfficher,"[Machine %d] : Pièce en transit vers convoyeur...",machines->numeroMachine);
+        sprintf(MessageAfficher,"[Machine %d] : Pièce [%d] en transit vers convoyeur...",machines->numeroMachine,myPiece.identifiant);
   	    affichageConsole(ligneMachine,MessageAfficher);
-        myPiece.tempsUsinage=(int)(temps/1000000);
-  			alimente_convoyeur(myPiece, machines->myConvoyeur, 0);
 
-  			sprintf(MessageAfficher,"[Machine %d] : Pièce déposée...",machines->numeroMachine);
+        //pthread_mutex_unlock(&machines->mutex);
+  			alimente_convoyeur(myPiece, machines->myConvoyeur, 0);
+        //pthread_mutex_lock(&machines->mutex);
+
+  			sprintf(MessageAfficher,"[Machine %d] : Pièce [%d] déposée...",machines->numeroMachine,myPiece.identifiant);
   	    affichageConsole(ligneMachine,MessageAfficher);
 
         v(semid); // signal au superviseur que la piece est posée

@@ -6,6 +6,10 @@
 #define MARCHE		1
 #define PANNE		0
 
+#define tempsLimiteTravail 40
+#define tempsLimiteRetrait 10
+#define probaMachineDefaillant 0.02
+
 typedef struct
 {
   struct convoyeur * myConvoyeur;

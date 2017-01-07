@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <pthread.h>
 
 #include "Rapport.h"
 
@@ -13,6 +14,12 @@ void NouveauRapport()
     int unite;
     int dixaine;
     int add;
+
+    if(pthread_mutex_init(&mutexRapport, NULL) == -1)
+    {
+  		perror("Initialisation mutex de synchro de machine\n");
+  		exit(1);
+  	}
 
     fichierIndex = fopen("Rapport/Index_Rapport.txt", "a+");
 
@@ -56,7 +63,9 @@ void NouveauRapport()
 
 void EcrireRapport(char * MessageRapport)
 {
+  pthread_mutex_lock(&mutexRapport);
   fichierRapport = fopen(nomRapport, "a+");  //On créé le nouveau Rapport
   fprintf(fichierRapport,"%s", MessageRapport);	//On ajoute le titre du rapport
   fclose(fichierRapport);
+  pthread_mutex_unlock(&mutexRapport);
 }
