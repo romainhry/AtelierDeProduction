@@ -1,7 +1,6 @@
-# AtelierDeProduction
+# AtelierDeProduction (# ProductionWorkshop)
 
+Educational project implementing synchronization mechanisms through different processes and threads to protect critical sections.
 
-Projet pédagogique méttant oeuvre des mécanismes de synchronisation à travers différents processus et threads afin de protéger des sections critiques.
-
-Mise en oeuvre :
-Programmation parallèle et Concurrence ; Ressources Partagées ; Communication processus ; Synchronisation.
+Implementation :
+Parallel Programming; Shared Resources; Communication process; Synchronization.
